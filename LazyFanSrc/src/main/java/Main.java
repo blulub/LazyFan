@@ -1,15 +1,23 @@
+import com.google.gson.Gson;
+
+import Constants.Keys;
+import Constants.SportType;
+import Pollers.SeatGeekPoller;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 
 public class Main {
-  private static String consumerKey = "j1cAeRMFWAez8FAb5ZJVbZV5S";
-  private static String consumerSecret = "dbeocgH55EOETEMIXTZN1oAbtT9mzH4PbT1buViu1PjKvWCSRd";
-  private static String accessToken = "752518914391810048-kk8gLnQ8QMC4rN0P2cs756945iMsQfg";
-  private static String accessTokenSecret = "0QyxHEqo5nr1XOc8V2Zxl2KyAghuzJABKmPl396M7yPVo";
+  private static String consumerKey = Keys.consumerKey;
+  private static String consumerSecret = Keys.consumerSecret;
+  private static String accessToken = Keys.accessToken;
+  private static String accessTokenSecret = Keys.accessTokenSecret;
+
   private String[] args;
   public Twitter twitter;
+  private Gson gson = new Gson();
+  private SeatGeekPoller schedulePoller = new SeatGeekPoller(gson);
 
   private Main(String[] args) {
     this.args = args;
@@ -21,6 +29,8 @@ public class Main {
   }
 
   private void run() {
+    System.out.println(schedulePoller.getAllSportEvents());
+
     try {
       Twitter twitterInst = new TwitterFactory().getInstance();
       twitterInst.setOAuthConsumer(consumerKey, consumerSecret);
