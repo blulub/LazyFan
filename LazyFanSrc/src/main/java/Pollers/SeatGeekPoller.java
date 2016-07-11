@@ -15,25 +15,39 @@ import Constants.Keys;
 import Constants.SportType;
 import Models.SeatGeekEvents;
 
-public class SeatGeekPoller {
+public class SeatGeekPoller implements Poller<SeatGeekEvents> {
   private final String CLIENT_ID = Keys.seatGeakClientId;
   private final String URL = "https://api.seatgeek.com/2/events?per_page=25&taxonomies.name=";
   private final Gson gson;
+
+  private SeatGeekEvents cached;
 
   public SeatGeekPoller(Gson gson) {
     this.gson = gson;
   }
 
-  public SeatGeekEvents getAllSportEvents() {
+  public SeatGeekEvents getCached() {
+    return cached;
+  }
+
+  public SeatGeekEvents doPoll() {
     SeatGeekEvents allEvents = new SeatGeekEvents();
     for (SportType sport : SportType.values()) {
       SeatGeekEvents sportEvents = getSportEvents(sport);
       allEvents.join(sportEvents);
     }
-    return allEvents;
+    cached = allEvents;
+    return cached;
   }
 
-  public SeatGeekEvents getSportEvents(SportType sport) {
+  public void cleanCached() {
+    if (cached == null) {
+      return;
+    }
+    cached.filterOldGames();
+  }
+
+  private SeatGeekEvents getSportEvents(SportType sport) {
     try {
       URL url = new URL(URL + sport.name().toLowerCase() + "&client_id=" + CLIENT_ID);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
