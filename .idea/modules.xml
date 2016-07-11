@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LazyFan.iml" filepath="$PROJECT_DIR$/LazyFan.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LazyFanSrc/LazyFanSrc.iml" filepath="$PROJECT_DIR$/LazyFanSrc/LazyFanSrc.iml" />
     </modules>
   </component>
 </project>
