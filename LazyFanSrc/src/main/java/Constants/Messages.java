@@ -10,4 +10,7 @@ public class Messages {
   public static final String OVERTIME =
           "Overtime number %d! %s @ %s, %d to %d";
       // overTimeNumber, awayTeam, homeTeam, awayScore, homeScore
+
+  public static final String INVALID_KEYWORDS = "Could not determine any keywords from your message";
+  public static final String SUCCESSFUL_SET = "Success! You will be alerted for: ";
 }
