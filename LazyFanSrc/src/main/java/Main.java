@@ -1,11 +1,18 @@
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import Constants.Keys;
+import Constants.SportType;
+import Models.ScoreUpdate;
+import Pollers.EspnScorePoller;
 import Pollers.SeatGeekPoller;
 import twitter4j.DirectMessage;
 import twitter4j.Twitter;
@@ -33,6 +40,8 @@ public class Main {
     new Main(args).run();
   }
 
+
+
   private void run() {
 //    System.out.println(schedulePoller.doPoll().getDailyEvents());
 //    try {
@@ -44,24 +53,28 @@ public class Main {
 //      System.out.println("could not parse");
 //    }0
 
-    try {
-      Twitter twitterInst = new TwitterFactory().getInstance();
-      twitterInst.setOAuthConsumer(consumerKey, consumerSecret);
-      AccessToken access = new AccessToken(accessToken, accessTokenSecret);
-      twitterInst.setOAuthAccessToken(access);
-      twitter = twitterInst;
-      for (DirectMessage dm : twitter.getDirectMessages()) {
-        System.out.println(dm.getText());
-      }
+//    try {
+//      Twitter twitterInst = new TwitterFactory().getInstance();
+//      twitterInst.setOAuthConsumer(consumerKey, consumerSecret);
+//      AccessToken access = new AccessToken(accessToken, accessTokenSecret);
+//      twitterInst.setOAuthAccessToken(access);
+//      twitter = twitterInst;
+//      for (DirectMessage dm : twitter.getDirectMessages()) {
+//        System.out.println(dm.getText());
+//      }
+//
+//      // every 24 hours get a cached version of the daily schedule
+//      // go through the schedule and schedule events to take place near the end of games on the schedule
+//      // the events will keep polling the game and once it gets close, tweet out specifics about the game
+//
+//
+//    } catch (TwitterException te) {
+//      te.printStackTrace();
+//      System.out.println("could not access twitter");
+//    }
+    EspnScorePoller poll = new EspnScorePoller();
+    System.out.println(poll.filterResponse("&nba_s_delay=120&nba_s_stamp=0712114353&nba_s_count=0&nba_s_loaded=true", SportType.NBA));
 
-      // every 24 hours get a cached version of the daily schedule
-      // go through the schedule and schedule events to take place near the end of games on the schedule
-      // the events will keep polling the game and once it gets close, tweet out specifics about the game
 
-
-    } catch (TwitterException te) {
-      te.printStackTrace();
-      System.out.println("could not access twitter");
-    }
   }
 }

@@ -11,7 +11,7 @@ public class ScoreUpdate {
   private int homeScore;
   private int awayScore;
   private boolean overtime;
-  private int currentPeriod;
+  private String currentPeriod;
   private String timeLeft;
   private NotificationType notificationType;
 
@@ -27,13 +27,18 @@ public class ScoreUpdate {
     this.timeLeft = builder.timeLeft;
   }
 
-  public void update(int homeScore, int awayScore, boolean overtime, int currentPeriod, String timeLeft, NotificationType type) {
+  public void update(int homeScore, int awayScore, boolean overtime, String currentPeriod, String timeLeft, NotificationType type) {
     this.homeScore = homeScore;
     this.awayScore = awayScore;
     this.overtime = overtime;
     this.currentPeriod = currentPeriod;
     this.timeLeft = timeLeft;
     this.notificationType = type;
+  }
+
+  @Override
+  public String toString() {
+    return gameTitle + ": " + awayScore + " to " + homeScore + " at " + timeLeft + " in the " + currentPeriod;
   }
 
   public NotificationType getNotificationType() {
@@ -68,7 +73,7 @@ public class ScoreUpdate {
     return overtime;
   }
 
-  public int getCurrentPeriod() {
+  public String getCurrentPeriod() {
     return currentPeriod;
   }
 
@@ -84,10 +89,10 @@ public class ScoreUpdate {
     private int homeScore;
     private int awayScore;
     private boolean overtime = false;
-    private int currentPeriod;
+    private String currentPeriod;
     private String timeLeft;
 
-    public ScoreUpdateBuilder(String homeName, String awayName, int homeScore, int awayScore, int currentPeriod, String timeLeft) {
+    public ScoreUpdateBuilder(String homeName, String awayName, int homeScore, int awayScore, String currentPeriod, String timeLeft) {
       this.homeName = homeName;
       this.awayName = awayName;
       this.homeScore = homeScore;
@@ -96,16 +101,16 @@ public class ScoreUpdate {
       this.timeLeft = timeLeft;
     }
 
-    public void gameTitle(String gameTitle) {
-      this.gameTitle = gameTitle;
+    public ScoreUpdateBuilder gameTitle(String gameTitle) {
+      this.gameTitle = gameTitle; return this;
     }
 
-    public void sportType(SportType type) {
-      this.type = type;
+    public ScoreUpdateBuilder sportType(SportType type) {
+      this.type = type; return this;
     }
 
-    public void overtime(boolean overtime) {
-      this.overtime = overtime;
+    public ScoreUpdateBuilder overtime(boolean overtime) {
+      this.overtime = overtime; return this;
     }
 
     public ScoreUpdate build() {

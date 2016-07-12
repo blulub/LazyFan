@@ -29,11 +29,11 @@ public class DMHandler {
   private Long lastDMid;
 
   public DMHandler() throws SQLException, ClassNotFoundException{
-    String url = "";
-    String username = "";
-    String password = "";
-    String dbName = "";
-    String driver = "";
+    String url = "jdbc:mysql://127.9.197.2:3306/";
+    String username = "adminFbtNmeS";
+    String password = "rgcyzsNWilxj";
+    String dbName = "jbossas";
+    String driver = "com.mysql.jdbc.Driver";
     Class.forName(driver);
     conn = DriverManager.getConnection(url + dbName, username, password);
 
@@ -161,8 +161,10 @@ public class DMHandler {
       DMHandler dmHandler = new DMHandler();
       dmHandler.setTags(dmHandler.getDMsSinceLast());
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not instantiate DMHandler");
     } catch (ClassNotFoundException e) {
+      e.printStackTrace();
       System.out.println("Could not instantiate DMHandler");
     }
   }

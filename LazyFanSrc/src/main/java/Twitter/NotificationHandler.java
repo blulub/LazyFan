@@ -29,11 +29,11 @@ public class NotificationHandler {
   private Twitter twitter;
 
   public NotificationHandler() throws SQLException, ClassNotFoundException{
-    String url = "";
-    String username = "";
-    String password = "";
-    String dbName = "";
-    String driver = "";
+    String url = "mysql://127.9.197.2:3306/";
+    String username = "adminFbtNmeS";
+    String password = "rgcyzsNWilxj";
+    String dbName = "jbossas";
+    String driver = "com.mysql.jdbc.Driver";
     Class.forName(driver);
     conn = DriverManager.getConnection(url + dbName, username, password);
 
