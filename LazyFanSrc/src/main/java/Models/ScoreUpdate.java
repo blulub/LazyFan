@@ -29,7 +29,7 @@ public class ScoreUpdate {
     this.id = Math.abs(builder.gameTitle.hashCode());
 
     try {
-      int period = Integer.valueOf(currentPeriod);
+      int period = Integer.parseInt(currentPeriod.replaceAll("\\D", ""));
       if (period == type.getLastPeriod()) {
         if (homeScore == awayScore) {
           this.notificationType = NotificationType.TIED_GAME;

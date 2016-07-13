@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import Constants.Messages;
+import Constants.Times;
 import Models.ScoreUpdate;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
@@ -88,7 +89,7 @@ public class NotificationHandler {
             scoreUpdate.getAwayScore(),
             scoreUpdate.getHomeName(),
             scoreUpdate.getHomeScore(),
-            scoreUpdate.getTimeLeft(),
+            Times.intSecondsToStringMinutes(scoreUpdate.getTimeLeft()),
             scoreUpdate.getCurrentPeriod());  // awayName, awayScore, homeName, homeScore, timeLeft, quarter
         break;
       case TIED_GAME:
@@ -96,15 +97,15 @@ public class NotificationHandler {
             scoreUpdate.getAwayName(),
             scoreUpdate.getHomeName(),
             scoreUpdate.getAwayScore(),
-            scoreUpdate.getTimeLeft(),
+            Times.intSecondsToStringMinutes(scoreUpdate.getTimeLeft()),
             scoreUpdate.getCurrentPeriod());
         break;
       case OVERTIME:
         message = String.format(Messages.OVERTIME,
             scoreUpdate.getCurrentPeriod(),
             scoreUpdate.getAwayName(),
-            scoreUpdate.getHomeName(),
             scoreUpdate.getAwayScore(),
+            scoreUpdate.getHomeName(),
             scoreUpdate.getHomeScore());
         break;
     }

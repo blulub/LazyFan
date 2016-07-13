@@ -6,13 +6,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
+import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
+import com.sun.javafx.event.DirectEvent;
 
 import Constants.Messages;
 import twitter4j.DirectMessage;
@@ -48,14 +52,13 @@ public class DMHandler {
           @Override
           public void run() {
             System.out.println("Starting response to DMs.......");
-            System.out.println(getLastDM());
             setTags(getDMsSinceLast());
             System.out.println("Finished responding to DMs.......");
           }
         }, 0, 1, TimeUnit.MINUTES);
   }
 
-  private long getLastDM() {
+  private void getLastDM() {
     try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM lastMessage")) {
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) {
@@ -67,8 +70,6 @@ public class DMHandler {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-
-    return lastDMid;
   }
 
   /**
@@ -76,18 +77,17 @@ public class DMHandler {
    * @return List of DirectMessage since lastDM
    */
   private List<DirectMessage> getDMsSinceLast() {
-    lastDMid = getLastDM();
-
-    System.out.println("Starting getDMsSinceLast");
+    getLastDM();
     try {
       if (lastDMid == null) {
         List<DirectMessage> result = twitter.getDirectMessages();
-        System.out.println(result.size() + "all messages");
+        System.out.println("Number of messages: " + result.size());
         setLastDM(result);
         return result;
       } else {
         List<DirectMessage> result =  twitter.getDirectMessages(new Paging(lastDMid));
-        System.out.println(result.size() + "messages after last");
+
+        System.out.println("Number of new messages: " + result.size());
         setLastDM(result);
         return result;
       }
@@ -100,19 +100,27 @@ public class DMHandler {
   // sets the last DM to be the top message returned since
   private void setLastDM(List<DirectMessage> newMessagesSinceLast) {
     if (newMessagesSinceLast.size() > 0) {
-      System.out.println("Got messages and setting last message to the last one");
       DirectMessage last = newMessagesSinceLast.get(0);
-      try (PreparedStatement prep = conn.prepareStatement("UPDATE lastMessage SET lastID = ? WHERE lastID = ?")) {
-        prep.setLong(1, last.getId());
-        prep.setLong(2, lastDMid);
-      } catch (SQLException e) {
-        e.printStackTrace();
-        System.out.println("Could not set last DM id in database table lastMessage");
+      if (lastDMid == null) {
+        try (PreparedStatement prep = conn.prepareStatement("INSERT INTO lastMessage VALUE (?)")) {
+          prep.setLong(1, last.getId());
+          prep.execute();
+        } catch (SQLException e) {
+          e.printStackTrace();
+          System.out.println("Could not insert initial lastMessageID");
+        }
+      } else {
+        try (PreparedStatement prep = conn.prepareStatement("UPDATE lastMessage SET lastID = ? WHERE lastID = ?")) {
+          prep.setLong(1, last.getId());
+          prep.setLong(2, lastDMid);
+          prep.execute();
+        } catch (SQLException e) {
+          e.printStackTrace();
+          System.out.println("Could not set last DM id in database table lastMessage");
+        }
+        lastDMid = last.getId();
       }
-      lastDMid = last.getId();
     }
-
-    System.out.println("new lastDMID is: " + lastDMid);
   }
 
 
@@ -120,16 +128,20 @@ public class DMHandler {
     String query = "INSERT IGNORE INTO preferences VALUES (?, ?)";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
 
+      Set<Long> badUsers = new HashSet<>();
+
       for (DirectMessage DM : messages) {
-        System.out.println("Found DM: " + DM.getText());
         long senderID = DM.getSenderId();
         if (isResetRequest(DM)) {
           dropUserRecords(DM);
+        } else if (isJokeRequest(DM)) {
+          sendMessage(DM.getSenderId(), Messages.JOKE_RESPONSE);
         } else {
           List<String> keywords = parseKeyword(DM);
-          if (keywords.isEmpty()) {
+          if (keywords.isEmpty() && !badUsers.contains(DM.getId())) {
             try {
               twitter.sendDirectMessage(senderID, Messages.INVALID_KEYWORDS);
+              badUsers.add(DM.getId());
             } catch (TwitterException e) {
               System.out.println("Could not send invalid keyword warning, twitter down");
             }
@@ -142,6 +154,7 @@ public class DMHandler {
             sendSuccess(senderID, keywords);
           }
         }
+        destroyDM(DM.getId());
       }
 
       prep.executeBatch();
@@ -151,7 +164,16 @@ public class DMHandler {
     }
   }
 
-  public void sendSuccess(long senderID, List<String> keywords) {
+  private void destroyDM(long id) {
+    try {
+      twitter.destroyDirectMessage(id);
+    } catch (TwitterException e) {
+      System.out.println("Could not destroy already seen DM");
+      e.printStackTrace();
+    }
+  }
+
+  private void sendSuccess(long senderID, List<String> keywords) {
     StringBuilder message = new StringBuilder(Messages.SUCCESSFUL_SET);
     for (String team : keywords) {
       message.append("\n" + team);
@@ -161,6 +183,14 @@ public class DMHandler {
     } catch (TwitterException e) {
       e.printStackTrace();
       System.out.println("Twitter service down, could not send success message");
+    }
+  }
+
+  private void sendMessage(long senderID, String message) {
+    try {
+      twitter.sendDirectMessage(senderID, message);
+    } catch (TwitterException e) {
+      e.printStackTrace();
     }
   }
 
@@ -176,10 +206,18 @@ public class DMHandler {
     return message.getText().replaceAll(" ", "").startsWith("RESET");
   }
 
+  private boolean isJokeRequest(DirectMessage message) {
+    return message.getText().toLowerCase().contains("drop") &&
+        !message.getText().toLowerCase().contains(",");
+  }
+
   private void dropUserRecords(DirectMessage dm) {
     try (PreparedStatement prep = conn.prepareStatement("DELETE FROM preferences WHERE userID = ?")) {
       prep.setLong(1, dm.getSenderId());
       prep.execute();
+      System.out.println("Deleted user preferences for user: " + dm.getSenderId());
+
+      sendMessage(dm.getSenderId(), Messages.SUCCESSFUL_RESET);
     } catch (SQLException e) {
       e.printStackTrace();
       System.out.println("Could not delete user records");

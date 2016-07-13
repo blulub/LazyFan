@@ -62,8 +62,8 @@ public class Main {
       return;
     }
 
-    //this.schedulePoller.doPoll();
+    this.schedulePoller.doPoll();
     this.dmHandler.run();
-    //this.scorePoller.doPoll();
+    this.scorePoller.doPoll();
   }
 }

@@ -21,11 +21,13 @@ public class Times {
     } catch (ParseException e) {
       return -1;
     }
-
   }
 
-  public static void main (String[] args) {
-    System.out.println(stringMinutesToIntSeconds("05:45"));
-    System.out.println(stringMinutesToIntSeconds("5:45"));
+  public static String intSecondsToStringMinutes(int seconds) {
+    String outputFormat = "%d:%02d";
+    int min = seconds / 60;
+    int sec = seconds - (min * 60);
+    return String.format(outputFormat, min, sec);
   }
+
 }

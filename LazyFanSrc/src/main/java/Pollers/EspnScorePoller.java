@@ -99,7 +99,7 @@ public class EspnScorePoller {
         prep.setInt(1, update.getId());
         try (ResultSet rs = prep.executeQuery()) {
           if (rs.next()) {
-            String updateType = rs.getString(1);
+            String updateType = rs.getString(1).toLowerCase();
             switch (update.getNotificationType()) {
 
               // if the game is currently tied, only notify if the previous state was none
@@ -174,9 +174,6 @@ public class EspnScorePoller {
     try {
       URL url = new URL(String.format(Keys.ESPNFormat, urlForm.toLowerCase()));
 
-      System.out.println(url.toString());
-
-
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("GET");
       conn.setRequestProperty("Accept", "application/json");
@@ -230,7 +227,6 @@ public class EspnScorePoller {
         }
       }
     }
-    System.out.println(output);
     return output;
   }
 
@@ -312,8 +308,6 @@ public class EspnScorePoller {
         output.add(name);
       }
     }
-
-
     return output;
   }
 
