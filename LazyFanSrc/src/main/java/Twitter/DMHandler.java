@@ -47,7 +47,10 @@ public class DMHandler {
         new Runnable() {
           @Override
           public void run() {
+            System.out.println("Starting response to DMs.......");
+            System.out.println(getLastDM());
             setTags(getDMsSinceLast());
+            System.out.println("Finished responding to DMs.......");
           }
         }, 0, 1, TimeUnit.MINUTES);
   }
@@ -62,8 +65,9 @@ public class DMHandler {
         }
       }
     } catch (SQLException e) {
-      System.out.println("Could not access lastMessage table to get last DM");
+      e.printStackTrace();
     }
+
     return lastDMid;
   }
 
@@ -73,13 +77,17 @@ public class DMHandler {
    */
   private List<DirectMessage> getDMsSinceLast() {
     lastDMid = getLastDM();
+
+    System.out.println("Starting getDMsSinceLast");
     try {
       if (lastDMid == null) {
         List<DirectMessage> result = twitter.getDirectMessages();
+        System.out.println(result.size() + "all messages");
         setLastDM(result);
         return result;
       } else {
         List<DirectMessage> result =  twitter.getDirectMessages(new Paging(lastDMid));
+        System.out.println(result.size() + "messages after last");
         setLastDM(result);
         return result;
       }
@@ -92,15 +100,19 @@ public class DMHandler {
   // sets the last DM to be the top message returned since
   private void setLastDM(List<DirectMessage> newMessagesSinceLast) {
     if (newMessagesSinceLast.size() > 0) {
+      System.out.println("Got messages and setting last message to the last one");
       DirectMessage last = newMessagesSinceLast.get(0);
       try (PreparedStatement prep = conn.prepareStatement("UPDATE lastMessage SET lastID = ? WHERE lastID = ?")) {
         prep.setLong(1, last.getId());
         prep.setLong(2, lastDMid);
       } catch (SQLException e) {
+        e.printStackTrace();
         System.out.println("Could not set last DM id in database table lastMessage");
       }
       lastDMid = last.getId();
     }
+
+    System.out.println("new lastDMID is: " + lastDMid);
   }
 
 
@@ -109,6 +121,7 @@ public class DMHandler {
     try (PreparedStatement prep = conn.prepareStatement(query)) {
 
       for (DirectMessage DM : messages) {
+        System.out.println("Found DM: " + DM.getText());
         long senderID = DM.getSenderId();
         if (isResetRequest(DM)) {
           dropUserRecords(DM);
@@ -133,6 +146,7 @@ public class DMHandler {
 
       prep.executeBatch();
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not insert tags into database");
     }
   }
@@ -145,6 +159,7 @@ public class DMHandler {
     try {
       twitter.sendDirectMessage(senderID, message.toString());
     } catch (TwitterException e) {
+      e.printStackTrace();
       System.out.println("Twitter service down, could not send success message");
     }
   }
@@ -166,6 +181,7 @@ public class DMHandler {
       prep.setLong(1, dm.getSenderId());
       prep.execute();
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not delete user records");
     }
   }

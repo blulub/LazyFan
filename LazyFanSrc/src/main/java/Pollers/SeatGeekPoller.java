@@ -53,6 +53,7 @@ public class SeatGeekPoller {
         new Runnable() {
           @Override
           public void run() {
+            System.out.println("Starting poll for sports events");
             SeatGeekEvents allEvents = new SeatGeekEvents();
             for (SportType sport : SportType.values()) {
               SeatGeekEvents sportEvents = getSportEvents(sport);
@@ -61,11 +62,13 @@ public class SeatGeekPoller {
             cached = allEvents;
             syncSportsEvents(cached);
             cleanSportsEventsTable();
+            System.out.println("Finished polling and updating sports events");
           }
         }, 0, 12, TimeUnit.HOURS);
   }
 
   private void cleanSportsEventsTable() {
+    System.out.println("Cleaning sports events data..........");
     String query = "DELETE FROM schedule WHERE DATE_ADD(date, INTERVAL %s HOUR) < NOW() ";
     String deleteStatement = String.format(query, Times.CLEAR_SCHEDULE_INTERVAL);
     try (PreparedStatement prep = conn.prepareStatement(deleteStatement)) {
@@ -118,6 +121,7 @@ public class SeatGeekPoller {
       }
       prep.executeBatch();
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not reach database to update event schedule");
     }
   }

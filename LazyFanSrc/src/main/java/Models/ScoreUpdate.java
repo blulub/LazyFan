@@ -26,7 +26,7 @@ public class ScoreUpdate {
     this.overtime = builder.overtime;
     this.currentPeriod = builder.currentPeriod;
     this.timeLeft = builder.timeLeft;
-    this.id = builder.gameTitle.hashCode();
+    this.id = Math.abs(builder.gameTitle.hashCode());
 
     try {
       int period = Integer.valueOf(currentPeriod);

@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,19 +49,25 @@ public class EspnScorePoller {
         new Runnable() {
           @Override
           public void run() {
+            System.out.println("Starting poll for sport scores");
             List<ScoreUpdate> updates = new ArrayList<>();
             for (SportType type : SportType.values()) {
               updates.addAll(doOneSportPoll(type, type.espnFormat()));
             }
             List<ScoreUpdate> updatesToNotify = filterUpdates(updates);
 
+
+            System.out.println("There are " + updatesToNotify.size() + " updates to notify");
+
             // update users on games that are interesting based on their preferences
             for (ScoreUpdate update : updatesToNotify) {
+              System.out.println("Notifying users for game: " + update.getGameTitle());
               notifier.updateStatus(update);
               notifier.dmUsersOnGame(update);
             }
             syncScoreUpdates(updates);
             cleanScoreUpdatesTable();
+            System.out.println("Finished poll for sport scores......");
           }
         }, 0, 3, TimeUnit.MINUTES);
   }
@@ -69,6 +76,7 @@ public class EspnScorePoller {
    * Method that goes through games in the scoreUpdates table and deletes all finished ones
    */
   public void cleanScoreUpdatesTable() {
+    System.out.println("Cleaning scoreUpdate data.......");
     String query = "DELETE FROM scoreUpdates WHERE LOWER(updateType)='end'";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
       prep.execute();
@@ -152,6 +160,7 @@ public class EspnScorePoller {
       }
       prep.executeBatch();
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not update Scores in database");
     }
   }
@@ -164,7 +173,10 @@ public class EspnScorePoller {
   public List<ScoreUpdate> doOneSportPoll(SportType type, String urlForm) {
     try {
       URL url = new URL(String.format(Keys.ESPNFormat, urlForm.toLowerCase()));
+
       System.out.println(url.toString());
+
+
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("GET");
       conn.setRequestProperty("Accept", "application/json");
@@ -209,13 +221,16 @@ public class EspnScorePoller {
         lineList.remove(0);
         String httpLine = lineList.get(0);
         httpLine = httpLine.replaceAll("%20", " ");
+
         String[] scoreArray = httpLine.replaceAll("(?<=[a-zA-Z]) +(?=[a-zA-Z])", "-").replaceAll("\\s+", " ").split(" ");
+
         ScoreUpdate newScoreUpdate = makeScoreUpdate(Lists.newArrayList(scoreArray), type);
         if (newScoreUpdate != null) {
           output.add(newScoreUpdate);
         }
       }
     }
+    System.out.println(output);
     return output;
   }
 
@@ -226,13 +241,16 @@ public class EspnScorePoller {
    * @return ScoreUpdate object
    */
   public ScoreUpdate makeScoreUpdate(List<String> scores, SportType type) {
+    if (scores.size() != 7) {
+      return null;
+    }
 
-    String awayTeam = scores.get(0).replaceAll("-", " ");
+    String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
     int awayTeamScore = Integer.valueOf(scores.get(1));
-    String homeTeam = scores.get(2).replaceAll("-", " ");
+    String homeTeam = scores.get(2).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
     int homeTeamScore = Integer.valueOf(scores.get(3));
     String time = scores.get(4);
-    List<String> fullTeamNames = getFullTeamNames(homeTeam, awayTeam);
+    List<String> fullTeamNames = getFullTeamNames(homeTeam, awayTeam, type);
     homeTeam = fullTeamNames.get(0);
     awayTeam = fullTeamNames.get(1);
     if (time.toLowerCase().contains("end") || time.toLowerCase().contains("final")) {
@@ -247,6 +265,16 @@ public class EspnScorePoller {
     int seconds = Times.stringMinutesToIntSeconds(time);
     String period = scores.get(6);
     int periodNumber = Integer.parseInt(period.replaceAll("\\D", ""));
+
+    // there are instances where we receive: LA Sparks 77 Chicago 67 0:00 IN 4th
+    if (seconds == 0 && periodNumber == type.getLastPeriod() && homeTeamScore != awayTeamScore) {
+      return new ScoreUpdate.ScoreUpdateBuilder(homeTeam, awayTeam, homeTeamScore, awayTeamScore, "END", seconds)
+          .gameTitle(awayTeam + " @ " + homeTeam)
+          .sportType(type)
+          .overtime(type.isOvertime(periodNumber))
+          .build();
+    }
+
     return new ScoreUpdate.ScoreUpdateBuilder(homeTeam, awayTeam, homeTeamScore, awayTeamScore, period, seconds)
         .gameTitle(awayTeam + " @ " + homeTeam)
         .sportType(type)
@@ -254,35 +282,37 @@ public class EspnScorePoller {
         .build();
   }
 
-  private List<String> getFullTeamNames(String home, String away) {
+  private List<String> getFullTeamNames(String home, String away, SportType type) {
+    System.out.println("Getting full team names for: " + home + ", " + away);
     List<String> output = new LinkedList<>();
-    String homeTeamQuery = "SELECT homeTeamName FROM schedule WHERE LOWER(homeTeamName) LIKE '%?%' LIMIT 1";
-    try (PreparedStatement prep = conn.prepareStatement(homeTeamQuery)) {
-      prep.setString(1, home.toLowerCase());
-      try (ResultSet rs = prep.executeQuery()) {
-        if (rs.next()) {
-          output.add(rs.getString(1));
-        } else {
-          output.add(home);
+    List<String> inputNames = Lists.newArrayList(home, away);
+    String nameQuery = "SELECT homeTeamName, awayTeamName FROM schedule WHERE type=? AND (LOWER(homeTeamName) LIKE ? OR LOWER(awayTeamName) LIKE ?) LIMIT 1";
+    for (String name : inputNames) {
+      try (PreparedStatement prep = conn.prepareStatement(nameQuery)) {
+        prep.setString(1, type.name().toLowerCase());
+        prep.setString(2, "%" + name.toLowerCase() + "%");
+        prep.setString(3, "%" + name.toLowerCase() + "%");
+        try (ResultSet rs = prep.executeQuery()) {
+          if (rs.next()) {
+            String homeTeamName = rs.getString(1);
+            String awayTeamName = rs.getString(2);
+            if (homeTeamName != null && homeTeamName.contains(name)) {
+              output.add(homeTeamName);
+            } else if (awayTeamName != null && awayTeamName.contains(name)) {
+              output.add(awayTeamName);
+            } else {
+              output.add(name);
+            }
+          } else {
+            output.add(name);
+          }
         }
+      } catch (SQLException e) {
+        e.printStackTrace();
+        output.add(name);
       }
-    } catch (SQLException e) {
-      output.add(home);
     }
 
-    String awayTeamQuery = "SELECT awayTeamName FROM schedule WHERE LOWER(awayTeamName) LIKE '%?%' LIMIT 1";
-    try (PreparedStatement prep = conn.prepareStatement(awayTeamQuery)) {
-      prep.setString(1, away.toLowerCase());
-      try (ResultSet rs = prep.executeQuery()) {
-        if (rs.next()) {
-          output.add(rs.getString(1));
-        } else {
-          output.add(away);
-        }
-      }
-    } catch (SQLException e) {
-      output.add(away);
-    }
 
     return output;
   }

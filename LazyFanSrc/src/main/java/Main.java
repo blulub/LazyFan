@@ -42,6 +42,7 @@ public class Main {
       this.dmHandler = new DMHandler(this.conn, this.twitter);
       this.scorePoller = new EspnScorePoller(this.conn, this.notifier);
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("could not instantiate database connection");
     } catch (ClassNotFoundException e) {
       System.out.println("Could not find db driver class");
@@ -61,8 +62,8 @@ public class Main {
       return;
     }
 
-    this.schedulePoller.doPoll();
+    //this.schedulePoller.doPoll();
     this.dmHandler.run();
-    this.scorePoller.doPoll();
+    //this.scorePoller.doPoll();
   }
 }
