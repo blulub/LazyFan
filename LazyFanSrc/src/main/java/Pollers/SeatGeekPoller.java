@@ -10,6 +10,10 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -24,13 +28,16 @@ import Models.SeatGeekEvents;
 /**
  * Runs every 12 hours to get information on sport schedules
  */
-public class SeatGeekPoller implements Poller<SeatGeekEvents> {
+public class SeatGeekPoller {
   private final String CLIENT_ID = Keys.seatGeakClientId;
   private final String URL = "https://api.seatgeek.com/2/events?per_page=25&taxonomies.name=";
   private final Gson gson;
   private Connection conn;
 
   private SeatGeekEvents cached;
+
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
 
   public SeatGeekPoller(Connection conn) throws SQLException, ClassNotFoundException{
     this.conn = conn;
@@ -41,16 +48,21 @@ public class SeatGeekPoller implements Poller<SeatGeekEvents> {
     return cached;
   }
 
-  public SeatGeekEvents doPoll() {
-    SeatGeekEvents allEvents = new SeatGeekEvents();
-    for (SportType sport : SportType.values()) {
-      SeatGeekEvents sportEvents = getSportEvents(sport);
-      allEvents.join(sportEvents);
-    }
-    cached = allEvents;
-    syncSportsEvents(cached);
-    cleanSportsEventsTable();
-    return cached;
+  public void doPoll() {
+    final ScheduledFuture<?> handler = scheduler.scheduleWithFixedDelay(
+        new Runnable() {
+          @Override
+          public void run() {
+            SeatGeekEvents allEvents = new SeatGeekEvents();
+            for (SportType sport : SportType.values()) {
+              SeatGeekEvents sportEvents = getSportEvents(sport);
+              allEvents.join(sportEvents);
+            }
+            cached = allEvents;
+            syncSportsEvents(cached);
+            cleanSportsEventsTable();
+          }
+        }, 0, 12, TimeUnit.HOURS);
   }
 
   private void cleanSportsEventsTable() {

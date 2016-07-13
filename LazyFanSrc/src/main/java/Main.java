@@ -1,43 +1,51 @@
-import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import Constants.Keys;
-import Constants.SportType;
-import Models.ScoreUpdate;
-import Models.SeatGeekEvents;
 import Pollers.EspnScorePoller;
 import Pollers.SeatGeekPoller;
-import twitter4j.DirectMessage;
 import twitter4j.Twitter;
-import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 
-public class Main {
-  private static String consumerKey = Keys.consumerKey;
-  private static String consumerSecret = Keys.consumerSecret;
-  private static String accessToken = Keys.accessToken;
-  private static String accessTokenSecret = Keys.accessTokenSecret;
+import Twitter.NotificationHandler;
+import Twitter.DMHandler;
 
+public class Main {
   private String[] args;
   public Twitter twitter;
   private Gson gson = new Gson();
   private SeatGeekPoller schedulePoller = null;
+  private EspnScorePoller scorePoller = null;
+  private DMHandler dmHandler = null;
+  private NotificationHandler notifier = null;
   private Connection conn;
 
   private Main(String[] args) {
     this.args = args;
+    Twitter twitterInst = new TwitterFactory().getInstance();
+    twitterInst.setOAuthConsumer(Keys.consumerKey, Keys.consumerSecret);
+    AccessToken access = new AccessToken(Keys.accessToken, Keys.accessTokenSecret);
+    twitterInst.setOAuthAccessToken(access);
+    this.twitter = twitterInst;
+    this.gson = new Gson();
 
+    try {
+      String driver = "com.mysql.jdbc.Driver";
+      Class.forName(driver);
+      this.conn = DriverManager.getConnection(Keys.MYSQL_URL + Keys.DB_NAME, Keys.MYSQL_USERNAME, Keys.MYSQL_PASSWORD);
+      this.schedulePoller = new SeatGeekPoller(this.conn);
+      this.notifier = new NotificationHandler(this.conn, this.twitter);
+      this.dmHandler = new DMHandler(this.conn, this.twitter);
+      this.scorePoller = new EspnScorePoller(this.conn, this.notifier);
+    } catch (SQLException e) {
+      System.out.println("could not instantiate database connection");
+    } catch (ClassNotFoundException e) {
+      System.out.println("Could not find db driver class");
+    }
   }
 
 
@@ -48,42 +56,13 @@ public class Main {
 
 
   private void run() {
-//    System.out.println(schedulePoller.doPoll().getDailyEvents());
-//    try {
-//      String html = Jsoup.connect("http://sports.espn.go.com/mlb/boxscore?gameId=360710126&mlb_s_count=15&mlb_s_loaded=true").get().html();
-//      Document doc = Jsoup.parse(html);
-//      System.out.println(doc.select("#matchup-mlb-360710126-awayScore").first().text());  // selects away team score
-//      System.out.println(doc.select("#matchup-mlb-360710126-homeScore").first().text());  // selects home team score
-//    } catch (IOException e) {
-//      System.out.println("could not parse");
-//    }0
-
-//    try {
-//      Twitter twitterInst = new TwitterFactory().getInstance();
-//      twitterInst.setOAuthConsumer(consumerKey, consumerSecret);
-//      AccessToken access = new AccessToken(accessToken, accessTokenSecret);
-//      twitterInst.setOAuthAccessToken(access);
-//      twitter = twitterInst;
-//      for (DirectMessage dm : twitter.getDirectMessages()) {
-//        System.out.println(dm.getText());
-//      }
-//
-//      // every 24 hours get a cached version of the daily schedule
-//      // go through the schedule and schedule events to take place near the end of games on the schedule
-//      // the events will keep polling the game and once it gets close, tweet out specifics about the game
-//
-//
-//    } catch (TwitterException te) {
-//      te.printStackTrace();
-//      System.out.println("could not access twitter");
-//    }
-
-    if (schedulePoller != null) {
-      schedulePoller.doPoll();
-    } else {
-      System.out.println("schedulepoller null");
+    if (conn == null) {
+      System.out.println("Could not run bot, connection not made to database");
+      return;
     }
 
-
+    this.schedulePoller.doPoll();
+    this.dmHandler.run();
+    this.scorePoller.doPoll();
   }
 }

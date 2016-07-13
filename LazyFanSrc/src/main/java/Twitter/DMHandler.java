@@ -7,6 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
 
@@ -36,8 +40,16 @@ public class DMHandler {
     this.twitter = twitter;
   }
 
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
   public void run() {
-    setTags(getDMsSinceLast());
+    final ScheduledFuture<?> handler = scheduler.scheduleWithFixedDelay(
+        new Runnable() {
+          @Override
+          public void run() {
+            setTags(getDMsSinceLast());
+          }
+        }, 0, 1, TimeUnit.MINUTES);
   }
 
   private long getLastDM() {

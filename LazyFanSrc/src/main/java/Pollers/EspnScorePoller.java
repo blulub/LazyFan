@@ -14,7 +14,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
 
@@ -28,30 +31,38 @@ import Twitter.NotificationHandler;
 /**
  * Runs every 3 minutes to sync scores
  */
-public class EspnScorePoller implements Poller<List<ScoreUpdate>>, ScheduledExecutorService {
+public class EspnScorePoller {
   private Connection conn;
   private NotificationHandler notifier;
+
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
 
   public EspnScorePoller(Connection conn, NotificationHandler not) {
     this.conn = conn;
     this.notifier = not;
   }
 
-  public List<ScoreUpdate> doPoll() {
-    List<ScoreUpdate> updates = new ArrayList<>();
-    for (SportType type : SportType.values()) {
-      updates.addAll(doOneSportPoll(type, type.espnFormat()));
-    }
-    List<ScoreUpdate> updatesToNotify = filterUpdates(updates);
+  public void doPoll() {
+    final ScheduledFuture<?> handler = scheduler.scheduleWithFixedDelay(
+        new Runnable() {
+          @Override
+          public void run() {
+            List<ScoreUpdate> updates = new ArrayList<>();
+            for (SportType type : SportType.values()) {
+              updates.addAll(doOneSportPoll(type, type.espnFormat()));
+            }
+            List<ScoreUpdate> updatesToNotify = filterUpdates(updates);
 
-    // update users on games that are interesting based on their preferences
-    for (ScoreUpdate update : updatesToNotify) {
-      notifier.updateStatus(update);
-      notifier.dmUsersOnGame(update);
-    }
-    syncScoreUpdates(updates);
-    cleanScoreUpdatesTable();
-    return updates;
+            // update users on games that are interesting based on their preferences
+            for (ScoreUpdate update : updatesToNotify) {
+              notifier.updateStatus(update);
+              notifier.dmUsersOnGame(update);
+            }
+            syncScoreUpdates(updates);
+            cleanScoreUpdatesTable();
+          }
+        }, 0, 3, TimeUnit.MINUTES);
   }
 
   /**
