@@ -4,6 +4,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import Constants.SportType;
 import Constants.Times;
 
 public class Event {
@@ -21,6 +22,18 @@ public class Event {
   public boolean hasEnded() {
     return LocalDateTime.parse(this.datetime_utc, DateTimeFormatter.ISO_DATE_TIME).plusHours(4)
         .isBefore(LocalDateTime.now());
+  }
+
+  public long getID() {
+    return this.id;
+  }
+
+  public String getTitle() {
+    return this.title;
+  }
+
+  public String getType() {
+    return this.type;
   }
 
   /**

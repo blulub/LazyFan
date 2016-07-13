@@ -23,25 +23,21 @@ import static Constants.Keys.accessTokenSecret;
 import static Constants.Keys.consumerKey;
 import static Constants.Keys.consumerSecret;
 
+/**
+ * Handles registration through DM, runs continuously
+ */
 public class DMHandler {
   private Twitter twitter;
   private Connection conn;
   private Long lastDMid;
 
-  public DMHandler() throws SQLException, ClassNotFoundException{
-    String url = "jdbc:mysql://127.9.197.2:3306/";
-    String username = "adminFbtNmeS";
-    String password = "rgcyzsNWilxj";
-    String dbName = "jbossas";
-    String driver = "com.mysql.jdbc.Driver";
-    Class.forName(driver);
-    conn = DriverManager.getConnection(url + dbName, username, password);
+  public DMHandler(Connection conn, Twitter twitter) {
+    this.conn = conn;
+    this.twitter = twitter;
+  }
 
-    Twitter twitterInst = new TwitterFactory().getInstance();
-    twitterInst.setOAuthConsumer(consumerKey, consumerSecret);
-    AccessToken access = new AccessToken(accessToken, accessTokenSecret);
-    twitterInst.setOAuthAccessToken(access);
-    twitter = twitterInst;
+  public void run() {
+    setTags(getDMsSinceLast());
   }
 
   private long getLastDM() throws SQLException {
@@ -153,19 +149,6 @@ public class DMHandler {
       prep.execute();
     } catch (SQLException e) {
       System.out.println("Could not delete user records");
-    }
-  }
-
-  public static void main(String[] args) {
-    try {
-      DMHandler dmHandler = new DMHandler();
-      dmHandler.setTags(dmHandler.getDMsSinceLast());
-    } catch (SQLException e) {
-      e.printStackTrace();
-      System.out.println("Could not instantiate DMHandler");
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-      System.out.println("Could not instantiate DMHandler");
     }
   }
 

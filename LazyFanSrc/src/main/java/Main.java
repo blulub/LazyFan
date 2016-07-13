@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +14,7 @@ import org.jsoup.nodes.Document;
 import Constants.Keys;
 import Constants.SportType;
 import Models.ScoreUpdate;
+import Models.SeatGeekEvents;
 import Pollers.EspnScorePoller;
 import Pollers.SeatGeekPoller;
 import twitter4j.DirectMessage;
@@ -29,10 +32,12 @@ public class Main {
   private String[] args;
   public Twitter twitter;
   private Gson gson = new Gson();
-  private SeatGeekPoller schedulePoller = new SeatGeekPoller(gson);
+  private SeatGeekPoller schedulePoller = null;
+  private Connection conn;
 
   private Main(String[] args) {
     this.args = args;
+
   }
 
 
@@ -72,8 +77,12 @@ public class Main {
 //      te.printStackTrace();
 //      System.out.println("could not access twitter");
 //    }
-    EspnScorePoller poll = new EspnScorePoller();
-    System.out.println(poll.filterResponse("&nba_s_delay=120&nba_s_stamp=0712114353&nba_s_count=0&nba_s_loaded=true", SportType.NBA));
+
+    if (schedulePoller != null) {
+      schedulePoller.doPoll();
+    } else {
+      System.out.println("schedulepoller null");
+    }
 
 
   }

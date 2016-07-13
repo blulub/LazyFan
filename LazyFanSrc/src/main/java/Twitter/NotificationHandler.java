@@ -24,31 +24,54 @@ import static Constants.Keys.accessTokenSecret;
 import static Constants.Keys.consumerKey;
 import static Constants.Keys.consumerSecret;
 
+/**
+ * Handles status updates and messaging users with game information.
+ * Runs every 3 minutes to look for exciting games
+ */
 public class NotificationHandler {
   private Connection conn;
   private Twitter twitter;
 
-  public NotificationHandler() throws SQLException, ClassNotFoundException{
-    String url = "mysql://127.9.197.2:3306/";
-    String username = "adminFbtNmeS";
-    String password = "rgcyzsNWilxj";
-    String dbName = "jbossas";
-    String driver = "com.mysql.jdbc.Driver";
-    Class.forName(driver);
-    conn = DriverManager.getConnection(url + dbName, username, password);
-
-    Twitter twitterInst = new TwitterFactory().getInstance();
-    twitterInst.setOAuthConsumer(consumerKey, consumerSecret);
-    AccessToken access = new AccessToken(accessToken, accessTokenSecret);
-    twitterInst.setOAuthAccessToken(access);
-    twitter = twitterInst;
+  public NotificationHandler(Connection conn, Twitter twitter) {
+    this.conn = conn;
+    this.twitter = twitter;
   }
 
-  private List<Long> getUsersWithKeyword(String keyword) {
-    String query = "SELECT DISTINCT userID FROM preferences WHERE team = ?";
+  public void dmUsersOnGame(ScoreUpdate update) {
+    for (Long userID : getUsersWithInterest(update)) {
+      sendUserMessage(userID, update);
+    }
+  }
+
+  public List<Long> getUsersWithInterest(ScoreUpdate update) {
+    StringBuilder query = new StringBuilder("SELECT DISTINCT userID FROM preferences WHERE team = ? ");
+    for (String keyword : update.getGameTitle().split(" ")) {
+      query.append("OR team=? ");
+    }
+    for (String keyword : update.getHomeName().split(" ")) {
+      query.append("OR team=? ");
+    }
+    for (String keyword: update.getAwayName().split(" ")) {
+      query.append("OR team=? ");
+    }
+
     List<Long> users = new LinkedList<>();
-    try (PreparedStatement prep = conn.prepareStatement(query)) {
-      prep.setString(1, keyword);
+    int queryIndex = 2;
+
+    try (PreparedStatement prep = conn.prepareStatement(query.toString())) {
+      prep.setString(1, update.getGameTitle());
+      for (String keyword : update.getGameTitle().split(" ")) {
+        prep.setString(queryIndex, keyword);
+        queryIndex++;
+      }
+      for (String keyword : update.getHomeName().split(" ")) {
+        prep.setString(queryIndex, keyword);
+        queryIndex++;
+      }
+      for (String keyword: update.getAwayName().split(" ")) {
+        prep.setString(queryIndex, keyword);
+        queryIndex++;
+      }
       try (ResultSet rs = prep.executeQuery()) {
         while (rs.next()) {
           users.add(rs.getLong(1));
@@ -60,7 +83,7 @@ public class NotificationHandler {
     return users;
   }
 
-  private void updateStatus(ScoreUpdate scoreUpdate) {
+  public void updateStatus(ScoreUpdate scoreUpdate) {
     try {
       twitter.updateStatus(formatMessage(scoreUpdate));
     } catch (TwitterException e) {
@@ -100,7 +123,7 @@ public class NotificationHandler {
     return message;
   }
 
-  private void sendUserMessage(long user, ScoreUpdate scoreUpdate) {
+  public void sendUserMessage(long user, ScoreUpdate scoreUpdate) {
     try {
       twitter.sendDirectMessage(user, formatMessage(scoreUpdate));
     } catch (TwitterException e) {

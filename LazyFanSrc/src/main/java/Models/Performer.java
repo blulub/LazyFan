@@ -10,6 +10,18 @@ public class Performer {
     return !away_team;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public String getShort_name() {
+    return short_name;
+  }
+
   @Override
   public boolean equals(Object other) {
     if (other instanceof Performer) {

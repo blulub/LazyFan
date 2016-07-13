@@ -6,6 +6,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -13,17 +17,24 @@ import com.google.gson.JsonParser;
 
 import Constants.Keys;
 import Constants.SportType;
+import Constants.Times;
+import Models.Event;
 import Models.SeatGeekEvents;
 
+/**
+ * Runs every 12 hours to get information on sport schedules
+ */
 public class SeatGeekPoller implements Poller<SeatGeekEvents> {
   private final String CLIENT_ID = Keys.seatGeakClientId;
   private final String URL = "https://api.seatgeek.com/2/events?per_page=25&taxonomies.name=";
   private final Gson gson;
+  private Connection conn;
 
   private SeatGeekEvents cached;
 
-  public SeatGeekPoller(Gson gson) {
-    this.gson = gson;
+  public SeatGeekPoller(Connection conn) throws SQLException, ClassNotFoundException{
+    this.conn = conn;
+    this.gson = new Gson();
   }
 
   public SeatGeekEvents getCached() {
@@ -37,14 +48,19 @@ public class SeatGeekPoller implements Poller<SeatGeekEvents> {
       allEvents.join(sportEvents);
     }
     cached = allEvents;
+    syncSportsEvents(cached);
+    cleanSportsEventsTable();
     return cached;
   }
 
-  public void cleanCached() {
-    if (cached == null) {
-      return;
+  private void cleanSportsEventsTable() {
+    String query = "DELETE FROM schedule WHERE DATE_ADD(date, INTERVAL %s HOUR) < NOW() ";
+    String deleteStatement = String.format(query, Times.CLEAR_SCHEDULE_INTERVAL);
+    try (PreparedStatement prep = conn.prepareStatement(deleteStatement)) {
+      prep.execute();
+    } catch (SQLException e) {
+      System.out.println("Couldn't clear schedule table of old events");
     }
-    cached.filterOldGames();
   }
 
   private SeatGeekEvents getSportEvents(SportType sport) {
@@ -72,6 +88,25 @@ public class SeatGeekPoller implements Poller<SeatGeekEvents> {
       System.out.println("Could not getResponse response");
       e.printStackTrace();
       return null;
+    }
+  }
+
+  private void syncSportsEvents(SeatGeekEvents events) {
+    String query = "INSERT INTO schedule VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE date = ?";
+    try (PreparedStatement prep = conn.prepareStatement(query)) {
+      for (Event event : events.getEvents()) {
+        prep.setLong(1, event.getID());
+        prep.setString(2, event.getTitle());
+        prep.setString(3, event.getType());
+        prep.setString(4, event.getHomeTeam().getName());
+        prep.setString(5, event.getAwayTeam().getName());
+        prep.setDate(6, Date.valueOf(event.getStart().toLocalDate()));
+        prep.setDate(7, Date.valueOf(event.getStart().toLocalDate()));
+        prep.addBatch();
+      }
+      prep.executeBatch();
+    } catch (SQLException e) {
+      System.out.println("Could not reach database to update event schedule");
     }
   }
 
