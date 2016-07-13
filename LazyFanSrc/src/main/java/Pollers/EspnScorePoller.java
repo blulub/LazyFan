@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 import com.google.common.collect.Lists;
 
@@ -27,7 +28,7 @@ import Twitter.NotificationHandler;
 /**
  * Runs every 3 minutes to sync scores
  */
-public class EspnScorePoller implements Poller<List<ScoreUpdate>>{
+public class EspnScorePoller implements Poller<List<ScoreUpdate>>, ScheduledExecutorService {
   private Connection conn;
   private NotificationHandler notifier;
 

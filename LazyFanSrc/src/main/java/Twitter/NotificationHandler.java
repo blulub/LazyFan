@@ -1,7 +1,6 @@
 package Twitter;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,20 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import Constants.Messages;
-import Constants.NotificationType;
-import Models.Event;
 import Models.ScoreUpdate;
-import twitter4j.DirectMessage;
-import twitter4j.Paging;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
-import twitter4j.auth.AccessToken;
-
-import static Constants.Keys.accessToken;
-import static Constants.Keys.accessTokenSecret;
-import static Constants.Keys.consumerKey;
-import static Constants.Keys.consumerSecret;
 
 /**
  * Handles status updates and messaging users with game information.

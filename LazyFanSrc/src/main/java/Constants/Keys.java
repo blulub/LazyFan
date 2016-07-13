@@ -1,5 +1,6 @@
 package Constants;
 
+// public keys for now, will put in server as variables later
 public class Keys {
   public static final String consumerKey = "DcBJ6Kh2eD0Sf5ARlENJHXbvu";
   public static final String consumerSecret = "T7dTvLMIJhVPECMElcogF71k59suu0EJkiVAxDQecniAaNI97U";

@@ -40,7 +40,7 @@ public class DMHandler {
     setTags(getDMsSinceLast());
   }
 
-  private long getLastDM() throws SQLException {
+  private long getLastDM() {
     try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM lastMessage")) {
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) {
@@ -49,6 +49,8 @@ public class DMHandler {
           lastDMid = null;
         }
       }
+    } catch (SQLException e) {
+      System.out.println("Could not access lastMessage table to get last DM");
     }
     return lastDMid;
   }
@@ -58,6 +60,7 @@ public class DMHandler {
    * @return List of DirectMessage since lastDM
    */
   private List<DirectMessage> getDMsSinceLast() {
+    lastDMid = getLastDM();
     try {
       if (lastDMid == null) {
         List<DirectMessage> result = twitter.getDirectMessages();
@@ -136,6 +139,9 @@ public class DMHandler {
 
   private List<String> parseKeyword(DirectMessage message) {
     String noWhitespace = message.getText().replaceAll(" ", "");
+    if (!noWhitespace.contains(",")) {
+      return Lists.newArrayList();
+    }
     return Lists.newArrayList(noWhitespace.split(","));
   }
 
