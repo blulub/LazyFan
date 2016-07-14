@@ -1,10 +1,10 @@
 package Twitter;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,22 +19,16 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import Constants.Messages;
+import Constants.Times;
 import Constants.TwitterUtil;
+import Models.TeamConfiguration;
 import twitter4j.DirectMessage;
 import twitter4j.Paging;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
-import twitter4j.auth.AccessToken;
-
-import static Constants.Keys.accessToken;
-import static Constants.Keys.accessTokenSecret;
-import static Constants.Keys.consumerKey;
-import static Constants.Keys.consumerSecret;
 
 /**
  * Handles registration through DM, runs continuously
@@ -221,7 +215,7 @@ public class DMHandler {
 
 
   private void setTags(List<DirectMessage> messages) {
-    String query = "INSERT IGNORE INTO preferences VALUES (?, ?)";
+    String query = "INSERT IGNORE INTO preferences VALUES (?, ?, ?, ?, ?, false)";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
 
       Map<String, Set<Long>> seenUsers = ImmutableMap.of(
@@ -238,18 +232,25 @@ public class DMHandler {
         } else if (isHelpRequest(DM)) {
           sendMessage(DM.getSenderId(), Messages.NEW_FOLLOW, seenUsers.get(Messages.NEW_FOLLOW));
         } else {
-          List<String> keywords = parseKeyword(DM);
+          AbstractMap.SimpleImmutableEntry<List<TeamConfiguration>, List<String>> parsed = parseMessage(DM);
 
           // cache the userID so that we don't resend the same error message multiple times
-          if (keywords.isEmpty()) {
-            sendMessage(DM.getSenderId(), Messages.INVALID_KEYWORDS, seenUsers.get(Messages.INVALID_KEYWORDS));
+          if (parsed.getKey().isEmpty()) {
+            StringBuilder errors = new StringBuilder();
+            for (String message : parsed.getValue()) {
+              errors.append(message + "\n");
+            }
+            sendMessage(DM.getSenderId(), Messages.INVALID_KEYWORDS + errors.toString(), seenUsers.get(Messages.INVALID_KEYWORDS));
           } else {
-            for (String keyword : keywords) {
+            for (TeamConfiguration config : parsed.getKey()) {
               prep.setLong(1, DM.getSenderId());
-              prep.setString(2, keyword.toLowerCase());
+              prep.setString(2, config.team.toLowerCase());
+              prep.setInt(3, config.scoreDifferential);
+              prep.setInt(4, config.secondsleft);
+              prep.setInt(5, config.quarter);
               prep.addBatch();
             }
-            sendSuccess(senderID);
+            sendSuccess(senderID, parsed.getKey());
           }
         }
         //destroyDM(DM.getId());
@@ -271,14 +272,19 @@ public class DMHandler {
     }
   }
 
-  private List<String> getUserPreferences(Long userID) {
-    List<String> preferences = new LinkedList<>();
-    String query = "SELECT DISTINCT team FROM preferences WHERE userID = ?";
+  private List<TeamConfiguration> getUserPreferences(Long userID) {
+    List<TeamConfiguration> preferences = new LinkedList<>();
+    String query = "SELECT * FROM preferences WHERE userID = ?";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
       prep.setLong(1, userID);
       try (ResultSet rs = prep.executeQuery()) {
         while (rs.next()) {
-          preferences.add(rs.getString(1));
+          long user = rs.getLong(1);
+          String team = rs.getString(2);
+          int scoreDiff = rs.getInt(3);
+          int timeLeft = rs.getInt(4);
+          int period = rs.getInt(4);
+          preferences.add(new TeamConfiguration(team, scoreDiff, timeLeft, period));
         }
       }
     } catch (SQLException e) {
@@ -287,9 +293,11 @@ public class DMHandler {
     return preferences;
   }
 
-  private void sendSuccess(long senderID) {
+  private void sendSuccess(long senderID, List<TeamConfiguration> configs) {
     StringBuilder message = new StringBuilder(Messages.SUCCESSFUL_SET);
-    for (String team : getUserPreferences(senderID)) {
+    List<TeamConfiguration> all = getUserPreferences(senderID);
+    all.addAll(configs);
+    for (TeamConfiguration team : all) {
       message.append("\n" + team);
     }
     try {
@@ -319,8 +327,52 @@ public class DMHandler {
     return Lists.newArrayList(noWhitespace.split(","));
   }
 
+  private AbstractMap.SimpleImmutableEntry<List<TeamConfiguration>, List<String>>
+  parseMessage(DirectMessage message) {
+    String noWhitespace = message.getText().replaceAll("(?<=>).(?=<)", "");
+    List<TeamConfiguration> configs = new LinkedList<>();
+    List<String> errors = new LinkedList<>();
+    if (!(noWhitespace.contains("<") && noWhitespace.contains(">"))) {
+      return new AbstractMap.SimpleImmutableEntry<>(configs, errors);
+    }
+    String[] tokened = noWhitespace.replaceAll("<", "").split(">");
+
+    // <teamName, scoreDiff, timeLeft, quarter>  // use defaults if anything but teamName isn't provided
+    for (String config : tokened) {
+      String[] specs = config.split(",");
+      if (specs.length != 1 && specs.length != 4) {
+        errors.add("<" + config + ">");
+      } else {
+        if (specs.length == 1) {
+          TeamConfiguration newConfig = new TeamConfiguration(specs[0].toLowerCase(), -1, -1, -1);
+          configs.add(newConfig);
+        } else {
+          int timeLeft = Times.stringMinutesToIntSeconds(specs[2]);
+          if (timeLeft == -1) {
+            errors.add("<" + config + ">");
+            continue;
+          }
+
+          try {
+            TeamConfiguration newConfig = new TeamConfiguration(
+                specs[0].toLowerCase(),
+                Integer.valueOf(specs[1]),
+                timeLeft,
+                Integer.parseInt(specs[3].replaceAll("\\D", ""))
+            );
+
+            configs.add(newConfig);
+          } catch (Exception e) {
+            errors.add("<" + config + ">");
+          }
+        }
+      }
+    }
+    return new AbstractMap.SimpleImmutableEntry<>(configs, errors);
+  }
+
   private boolean isResetRequest(DirectMessage message) {
-    return message.getText().replaceAll(" ", "").toLowerCase().startsWith("RESET") &&
+    return message.getText().replaceAll(" ", "").toLowerCase().startsWith("reset") &&
         !message.getText().contains(",");
   }
 

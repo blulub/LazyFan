@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -54,22 +55,23 @@ public class EspnScorePoller {
             for (SportType type : SportType.values()) {
               updates.addAll(doOneSportPoll(type, type.espnFormat()));
             }
+
             List<ScoreUpdate> updatesToNotify = filterUpdates(updates);
-
-
-            System.out.println("There are " + updatesToNotify.size() + " updates to notify");
+            for (ScoreUpdate update: updatesToNotify) {
+              System.out.println("Updating twitter status to game: " + update.getGameTitle());
+              notifier.updateStatus(update);
+            }
 
             // update users on games that are interesting based on their preferences
-            for (ScoreUpdate update : updatesToNotify) {
+            for (ScoreUpdate update : updates) {
               System.out.println("Notifying users for game: " + update.getGameTitle());
-              notifier.updateStatus(update);
               notifier.dmUsersOnGame(update);
             }
             syncScoreUpdates(updates);
             cleanScoreUpdatesTable();
             System.out.println("Finished poll for sport scores......");
           }
-        }, 0, 3, TimeUnit.MINUTES);
+        }, 0, Times.LIVESCORE_INTERVAL, TimeUnit.MINUTES);
   }
 
   /**
@@ -77,7 +79,7 @@ public class EspnScorePoller {
    */
   public void cleanScoreUpdatesTable() {
     System.out.println("Cleaning scoreUpdate data.......");
-    String query = "DELETE FROM scoreUpdates WHERE LOWER(updateType)='end'";
+    String query = "DELETE FROM scoreUpdates WHERE LOWER(currentPeriod)='end'";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
       prep.execute();
     } catch (SQLException e) {
@@ -175,6 +177,8 @@ public class EspnScorePoller {
   public List<ScoreUpdate> doOneSportPoll(SportType type, String urlForm) {
     try {
       URL url = new URL(String.format(Keys.ESPNFormat, urlForm.toLowerCase()));
+
+      System.out.println("Polling " + type.name() + " at: " + url.toString());
 
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("GET");
@@ -316,6 +320,8 @@ public class EspnScorePoller {
     }
     return output;
   }
+
+
 
 
 }

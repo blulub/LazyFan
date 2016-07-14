@@ -64,7 +64,7 @@ public class SeatGeekPoller {
             cleanSportsEventsTable();
             System.out.println("Finished polling and updating sports events");
           }
-        }, 0, 12, TimeUnit.HOURS);
+        }, 0, Times.SCHEDULE_INTERVAL, TimeUnit.HOURS);
   }
 
   private void cleanSportsEventsTable() {

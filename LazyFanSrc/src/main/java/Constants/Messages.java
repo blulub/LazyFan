@@ -11,7 +11,7 @@ public class Messages {
           "Overtime number %d! %s (%d) @ %s (%d)";
       // overTimeNumber, awayTeam, homeTeam, awayScore, homeScore
 
-  public static final String INVALID_KEYWORDS = "I couldn't understand that. Please say \"help\" for a list of commands";
+  public static final String INVALID_KEYWORDS = "Errors determining teams\n";
   public static final String SUCCESSFUL_SET = "Success!\nYou will be alerted for:\n";
   public static final String SUCCESSFUL_RESET = "You have no more preferences";
   public static final String JOKE_RESPONSE =
@@ -21,9 +21,14 @@ public class Messages {
       "\n::::|:::::::::::::::::::/\n:::::\\:::::::::::::::::/\n::::::\\:::::::::::::::/";
 
   public static final String NEW_FOLLOW = "Hello!\n" +
-      "Please enter your teams separated by commas:\n\nteam1, team2, team3\n\n" +
-      "Or send a message with only: RESET\nTo clear all preferences\n\n" +
-      "Say: HELP\n to view this again";
+      "Please enter your teams in the format:\n\n" +
+      "<name, score, time, period><.....>\n\n" +
+      "  - name = any keyword\n" +
+      "  - score = threshold for alerts\n" +
+      "  - time = min:seconds left in a period (3:00)\n" +
+      "  - period = period of play (ex: 3)\n\n" +
+      "To clear all preferences, send:\n\n" +
+      "RESET\n\n";
 
 
 

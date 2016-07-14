@@ -1,9 +1,19 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
+
 
 import Constants.Keys;
 import Pollers.EspnScorePoller;
+import Pollers.MessageStatusUpdater;
 import Pollers.SeatGeekPoller;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
@@ -18,6 +28,7 @@ public class Main {
   private SeatGeekPoller schedulePoller = null;
   private EspnScorePoller scorePoller = null;
   private DMHandler dmHandler = null;
+  private MessageStatusUpdater statusUpdater = null;
   private NotificationHandler notifier = null;
   private Connection conn;
 
@@ -41,6 +52,7 @@ public class Main {
       this.notifier = new NotificationHandler(this.conn, this.twitter);
       this.dmHandler = new DMHandler(this.conn, this.twitter);
       this.scorePoller = new EspnScorePoller(this.conn, this.notifier);
+      this.statusUpdater = new MessageStatusUpdater(this.conn);
     } catch (SQLException e) {
       e.printStackTrace();
       System.out.println("could not instantiate database connection");
@@ -61,8 +73,17 @@ public class Main {
       return;
     }
 
+    Calendar cal = Calendar.getInstance();
+    cal.set(Calendar.HOUR_OF_DAY, 4);
+    cal.set(Calendar.MINUTE, 37);
+    Date time = cal.getTime();
+
+    Timer timer = new Timer();
+    timer.schedule(new MessageStatusUpdater(this.conn), time, TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
+
     this.schedulePoller.doPoll();
     this.dmHandler.run();
     this.scorePoller.doPoll();
+
   }
 }

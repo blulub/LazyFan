@@ -4,8 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import Constants.Messages;
 import Constants.Times;
@@ -27,14 +29,18 @@ public class NotificationHandler {
   }
 
   public void dmUsersOnGame(ScoreUpdate update) {
-    for (Long userID : getUsersWithInterest(update)) {
+    Map<Long, String> messageHeaders = getUsersWithInterest(update);
+    for (Long userID : messageHeaders.keySet()) {
       sendUserMessage(userID, update);
     }
+    updateSent(messageHeaders);
   }
 
-  public List<Long> getUsersWithInterest(ScoreUpdate update) {
+  public Map<Long, String> getUsersWithInterest(ScoreUpdate update) {
+    int scoreDiff = Math.abs(update.getAwayScore() - update.getHomeScore());
+    int period = Integer.parseInt(update.getCurrentPeriod().replaceAll("\\D", ""));
     StringBuilder query =
-        new StringBuilder("SELECT DISTINCT userID FROM preferences WHERE team = ? ");
+        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (team = ? ");
     for (String keyword : update.getGameTitle().split(" ")) {
       query.append("OR team=? ");
     }
@@ -44,8 +50,9 @@ public class NotificationHandler {
     for (String keyword: update.getAwayName().split(" ")) {
       query.append("OR team=? ");
     }
+    query.append(") AND scoreDiff <= ? AND timeLeft <= ? AND period >= ? AND alreadySent = false");
 
-    List<Long> users = new LinkedList<>();
+    Map<Long, String> output = new HashMap<>();
     int queryIndex = 2;
 
     try (PreparedStatement prep = conn.prepareStatement(query.toString())) {
@@ -62,15 +69,32 @@ public class NotificationHandler {
         prep.setString(queryIndex, keyword);
         queryIndex++;
       }
+      prep.setInt(queryIndex++, scoreDiff);
+      prep.setInt(queryIndex++, update.getTimeLeft());
+      prep.setInt(queryIndex, period);
       try (ResultSet rs = prep.executeQuery()) {
         while (rs.next()) {
-          users.add(rs.getLong(1));
+          output.put(rs.getLong(1), rs.getString(2));
         }
       }
     } catch (SQLException e) {
       System.out.println("Could not query database for users matching teams");
     }
-    return users;
+    return output;
+  }
+
+  private void updateSent(Map<Long, String> updates) {
+    String query = "UPDATE preferences SET alreadySent = true WHERE userID = ? AND team = ?";
+    try (PreparedStatement prep = conn.prepareStatement(query)) {
+      for (Long key : updates.keySet()) {
+        prep.setLong(1, key);
+        prep.setString(2, updates.get(key));
+        prep.addBatch();
+      }
+      prep.executeBatch();
+    } catch (SQLException e) {
+      System.out.println("Could not set update as sent");
+    }
   }
 
   public void updateStatus(ScoreUpdate scoreUpdate) {
@@ -120,4 +144,5 @@ public class NotificationHandler {
       System.out.println("Could not send DM, twitter service error");
     }
   }
+
 }
