@@ -33,7 +33,8 @@ public class NotificationHandler {
   }
 
   public List<Long> getUsersWithInterest(ScoreUpdate update) {
-    StringBuilder query = new StringBuilder("SELECT DISTINCT userID FROM preferences WHERE team = ? ");
+    StringBuilder query =
+        new StringBuilder("SELECT DISTINCT userID FROM preferences WHERE team = ? ");
     for (String keyword : update.getGameTitle().split(" ")) {
       query.append("OR team=? ");
     }
@@ -90,7 +91,7 @@ public class NotificationHandler {
             scoreUpdate.getHomeName(),
             scoreUpdate.getHomeScore(),
             Times.intSecondsToStringMinutes(scoreUpdate.getTimeLeft()),
-            scoreUpdate.getCurrentPeriod());  // awayName, awayScore, homeName, homeScore, timeLeft, quarter
+            scoreUpdate.getCurrentPeriod());
         break;
       case TIED_GAME:
         message = String.format(Messages.TIED_GAME_FORMAT,

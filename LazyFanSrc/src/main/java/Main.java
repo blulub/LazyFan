@@ -32,7 +32,11 @@ public class Main {
     try {
       String driver = "com.mysql.jdbc.Driver";
       Class.forName(driver);
-      this.conn = DriverManager.getConnection(Keys.MYSQL_URL + Keys.DB_NAME, Keys.MYSQL_USERNAME, Keys.MYSQL_PASSWORD);
+      this.conn =
+          DriverManager.getConnection(
+              Keys.MYSQL_URL + Keys.DB_NAME,
+              Keys.MYSQL_USERNAME,
+              Keys.MYSQL_PASSWORD);
       this.schedulePoller = new SeatGeekPoller(this.conn);
       this.notifier = new NotificationHandler(this.conn, this.twitter);
       this.dmHandler = new DMHandler(this.conn, this.twitter);
@@ -49,7 +53,6 @@ public class Main {
   public static void main(String[] args) {
     new Main(args).run();
   }
-
 
 
   private void run() {

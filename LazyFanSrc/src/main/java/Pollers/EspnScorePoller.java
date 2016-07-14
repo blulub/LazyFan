@@ -86,7 +86,8 @@ public class EspnScorePoller {
   }
 
   /**
-   * Removes updates where game status hasn't changed (don't want to notify users multiple times of same game)
+   * Removes updates where game status hasn't changed
+   * (don't want to notify users multiple times of same game)
    * Also removes entries in database where the game has finished
    * @param updates List of updates
    */
@@ -135,7 +136,8 @@ public class EspnScorePoller {
   }
 
   public void syncScoreUpdates(List<ScoreUpdate> updates) {
-    String query = "INSERT INTO scoreUpdates VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+    String query = "INSERT INTO scoreUpdates VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        "ON DUPLICATE KEY UPDATE " +
         "homeScore = ?, awayScore = ?, overtime = ?, currentPeriod = ?, timeLeft = ?, updateType = ?";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
 
@@ -219,7 +221,10 @@ public class EspnScorePoller {
         String httpLine = lineList.get(0);
         httpLine = httpLine.replaceAll("%20", " ");
 
-        String[] scoreArray = httpLine.replaceAll("(?<=[a-zA-Z]) +(?=[a-zA-Z])", "-").replaceAll("\\s+", " ").split(" ");
+        String[] scoreArray =
+            httpLine.replaceAll("(?<=[a-zA-Z]) +(?=[a-zA-Z])", "-")
+                .replaceAll("\\s+", " ")
+                .split(" ");
 
         ScoreUpdate newScoreUpdate = makeScoreUpdate(Lists.newArrayList(scoreArray), type);
         if (newScoreUpdate != null) {
@@ -282,7 +287,8 @@ public class EspnScorePoller {
     System.out.println("Getting full team names for: " + home + ", " + away);
     List<String> output = new LinkedList<>();
     List<String> inputNames = Lists.newArrayList(home, away);
-    String nameQuery = "SELECT homeTeamName, awayTeamName FROM schedule WHERE type=? AND (LOWER(homeTeamName) LIKE ? OR LOWER(awayTeamName) LIKE ?) LIMIT 1";
+    String nameQuery = "SELECT homeTeamName, awayTeamName FROM schedule " +
+        "WHERE type=? AND (LOWER(homeTeamName) LIKE ? OR LOWER(awayTeamName) LIKE ?) LIMIT 1";
     for (String name : inputNames) {
       try (PreparedStatement prep = conn.prepareStatement(nameQuery)) {
         prep.setString(1, type.name().toLowerCase());
