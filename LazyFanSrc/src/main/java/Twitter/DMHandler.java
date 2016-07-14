@@ -8,16 +8,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
-import com.sun.javafx.event.DirectEvent;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import Constants.Messages;
 import Constants.TwitterUtil;
@@ -57,7 +60,7 @@ public class DMHandler {
             System.out.println("Starting response to DMs.......");
             setTags(getDMsSinceLast());
             for (long newFollower : getFollowersSince()) {
-              sendMessage(newFollower, Messages.NEW_FOLLOW);
+              sendMessage(newFollower, Messages.NEW_FOLLOW, Sets.newHashSet());
             }
             System.out.println("Finished responding to DMs.......");
           }
@@ -129,7 +132,7 @@ public class DMHandler {
       } else {
         List<Long> result =  TwitterUtil.getFollowersSince(twitter, twitter.getId(), lastFollowerID);
         filterFollowersForActivity(result);
-        System.out.println("Number of new messages: " + result.size());
+        System.out.println("Number of new followers: " + result.size());
         setLastFollower(result);
         return result;
       }
@@ -221,33 +224,35 @@ public class DMHandler {
     String query = "INSERT IGNORE INTO preferences VALUES (?, ?)";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
 
-      Set<Long> badUsers = new HashSet<>();
+      Map<String, Set<Long>> seenUsers = ImmutableMap.of(
+          Messages.JOKE_RESPONSE, Sets.newHashSet(),
+          Messages.NEW_FOLLOW, Sets.newHashSet(),
+          Messages.INVALID_KEYWORDS, Sets.newHashSet());
 
       for (DirectMessage DM : messages) {
         long senderID = DM.getSenderId();
         if (isResetRequest(DM)) {
           dropUserRecords(DM);
         } else if (isJokeRequest(DM)) {
-          sendMessage(DM.getSenderId(), Messages.JOKE_RESPONSE);
+          sendMessage(DM.getSenderId(), Messages.JOKE_RESPONSE, seenUsers.get(Messages.JOKE_RESPONSE));
+        } else if (isHelpRequest(DM)) {
+          sendMessage(DM.getSenderId(), Messages.NEW_FOLLOW, seenUsers.get(Messages.NEW_FOLLOW));
         } else {
           List<String> keywords = parseKeyword(DM);
-          if (keywords.isEmpty() && !badUsers.contains(DM.getId())) {
-            try {
-              twitter.sendDirectMessage(senderID, Messages.INVALID_KEYWORDS);
-              badUsers.add(DM.getId());
-            } catch (TwitterException e) {
-              System.out.println("Could not send invalid keyword warning, twitter down");
-            }
+
+          // cache the userID so that we don't resend the same error message multiple times
+          if (keywords.isEmpty()) {
+            sendMessage(DM.getSenderId(), Messages.INVALID_KEYWORDS, seenUsers.get(Messages.INVALID_KEYWORDS));
           } else {
             for (String keyword : keywords) {
               prep.setLong(1, DM.getSenderId());
               prep.setString(2, keyword.toLowerCase());
               prep.addBatch();
             }
-            sendSuccess(senderID, keywords);
+            sendSuccess(senderID);
           }
         }
-        destroyDM(DM.getId());
+        //destroyDM(DM.getId());
       }
 
       prep.executeBatch();
@@ -266,9 +271,25 @@ public class DMHandler {
     }
   }
 
-  private void sendSuccess(long senderID, List<String> keywords) {
+  private List<String> getUserPreferences(Long userID) {
+    List<String> preferences = new LinkedList<>();
+    String query = "SELECT DISTINCT team FROM preferences WHERE userID = ?";
+    try (PreparedStatement prep = conn.prepareStatement(query)) {
+      prep.setLong(1, userID);
+      try (ResultSet rs = prep.executeQuery()) {
+        while (rs.next()) {
+          preferences.add(rs.getString(1));
+        }
+      }
+    } catch (SQLException e) {
+      System.out.println("Could not access all of " + userID + "'s preferences");
+    }
+    return preferences;
+  }
+
+  private void sendSuccess(long senderID) {
     StringBuilder message = new StringBuilder(Messages.SUCCESSFUL_SET);
-    for (String team : keywords) {
+    for (String team : getUserPreferences(senderID)) {
       message.append("\n" + team);
     }
     try {
@@ -279,9 +300,12 @@ public class DMHandler {
     }
   }
 
-  private void sendMessage(long senderID, String message) {
+  private void sendMessage(long senderID, String message, Set<Long> users) {
     try {
-      twitter.sendDirectMessage(senderID, message);
+      if (!users.contains(senderID)) {
+        twitter.sendDirectMessage(senderID, message);
+        users.add(senderID);
+      }
     } catch (TwitterException e) {
       e.printStackTrace();
     }
@@ -296,12 +320,17 @@ public class DMHandler {
   }
 
   private boolean isResetRequest(DirectMessage message) {
-    return message.getText().replaceAll(" ", "").startsWith("RESET");
+    return message.getText().replaceAll(" ", "").toLowerCase().startsWith("RESET") &&
+        !message.getText().contains(",");
   }
 
   private boolean isJokeRequest(DirectMessage message) {
     return message.getText().toLowerCase().contains("drop") &&
         !message.getText().toLowerCase().contains(",");
+  }
+
+  private boolean isHelpRequest(DirectMessage message) {
+    return message.getText().toLowerCase().replaceAll("\\s+", "").equals("help");
   }
 
   private void dropUserRecords(DirectMessage dm) {
@@ -310,7 +339,7 @@ public class DMHandler {
       prep.execute();
       System.out.println("Deleted user preferences for user: " + dm.getSenderId());
 
-      sendMessage(dm.getSenderId(), Messages.SUCCESSFUL_RESET);
+      sendMessage(dm.getSenderId(), Messages.SUCCESSFUL_RESET, Sets.newHashSet());
     } catch (SQLException e) {
       e.printStackTrace();
       System.out.println("Could not delete user records");

@@ -11,8 +11,8 @@ public class Messages {
           "Overtime number %d! %s (%d) @ %s (%d)";
       // overTimeNumber, awayTeam, homeTeam, awayScore, homeScore
 
-  public static final String INVALID_KEYWORDS = "Could not determine any keywords from your message";
-  public static final String SUCCESSFUL_SET = "Success!\nYou will be alerted for: ";
+  public static final String INVALID_KEYWORDS = "I couldn't understand that. Please say \"help\" for a list of commands";
+  public static final String SUCCESSFUL_SET = "Success!\nYou will be alerted for:\n";
   public static final String SUCCESSFUL_RESET = "You have no more preferences";
   public static final String JOKE_RESPONSE =
   ":::::::::::::/”\\" + "\n" + "::::::::::::|\\:/|\n::::::::::::|:::|\n::::::::::::|:~|\n" +
@@ -21,8 +21,9 @@ public class Messages {
       "\n::::|:::::::::::::::::::/\n:::::\\:::::::::::::::::/\n::::::\\:::::::::::::::/";
 
   public static final String NEW_FOLLOW = "Hello!\n" +
-      "Please enter your keywords to follow in the form:\n<word>, <word2>\n" +
-      "Or please say:\nRESET\nTo clear all preferences";
+      "Please enter your teams separated by commas:\n\nteam1, team2, team3\n\n" +
+      "Or send a message with only: RESET\nTo clear all preferences\n\n" +
+      "Say: HELP\n to view this again";
 
 
 
