@@ -2,8 +2,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import com.google.gson.Gson;
-
 import Constants.Keys;
 import Pollers.EspnScorePoller;
 import Pollers.SeatGeekPoller;
@@ -17,7 +15,6 @@ import Twitter.DMHandler;
 public class Main {
   private String[] args;
   public Twitter twitter;
-  private Gson gson = new Gson();
   private SeatGeekPoller schedulePoller = null;
   private EspnScorePoller scorePoller = null;
   private DMHandler dmHandler = null;
@@ -31,7 +28,6 @@ public class Main {
     AccessToken access = new AccessToken(Keys.accessToken, Keys.accessTokenSecret);
     twitterInst.setOAuthAccessToken(access);
     this.twitter = twitterInst;
-    this.gson = new Gson();
 
     try {
       String driver = "com.mysql.jdbc.Driver";

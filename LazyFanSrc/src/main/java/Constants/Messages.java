@@ -20,6 +20,10 @@ public class Messages {
       "\n::::|:::[#]:::|:::|::\\\n::::|:::|:::|:::|:::|:::\\\n::::|:~:~::~::~:|::::)" +
       "\n::::|:::::::::::::::::::/\n:::::\\:::::::::::::::::/\n::::::\\:::::::::::::::/";
 
+  public static final String NEW_FOLLOW = "Hello!\n" +
+      "Please enter your keywords to follow in the form:\n<word>, <word2>\n" +
+      "Or please say:\nRESET\nTo clear all preferences";
+
 
 
 }

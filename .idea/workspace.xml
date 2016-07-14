@@ -2,19 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="45f9a337-5d7a-482a-963a-6e33a7f662ad" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/target/classes/Constants/SportType$7.class" afterPath="$PROJECT_DIR$/LazyFanSrc/target/classes/Constants/SportType$7.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/target/classes/Models/ScoreUpdate.class" afterPath="$PROJECT_DIR$/LazyFanSrc/target/classes/Models/ScoreUpdate.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/target/classes/Pollers/EspnScorePoller.class" afterPath="$PROJECT_DIR$/LazyFanSrc/target/classes/Pollers/EspnScorePoller.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/target/classes/Twitter/DMHandler$1.class" afterPath="$PROJECT_DIR$/LazyFanSrc/target/classes/Twitter/DMHandler$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/target/classes/Twitter/DMHandler.class" afterPath="$PROJECT_DIR$/LazyFanSrc/target/classes/Twitter/DMHandler.class" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/TwitterUtil.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/target/classes/Main.class" afterPath="$PROJECT_DIR$/LazyFanSrc/target/classes/Main.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/pom.xml" afterPath="$PROJECT_DIR$/LazyFanSrc/pom.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/SportType.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/SportType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Times.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Times.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Main.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Main.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/ScoreUpdate.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/ScoreUpdate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Pollers/EspnScorePoller.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Pollers/EspnScorePoller.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/NotificationHandler.java" afterPath="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/NotificationHandler.java" />
     </list>
     <ignored path="LazyFan.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -40,40 +33,13 @@
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="485">
-              <caret line="60" column="79" selection-start-line="60" selection-start-column="79" selection-end-line="60" selection-end-column="79" />
+            <state relative-caret-position="134">
+              <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#1810#1811#0" expanded="true" />
-                <element signature="e#1840#1841#0" expanded="true" />
+                <element signature="e#1718#1719#0" expanded="true" />
+                <element signature="e#1748#1749#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ScoreUpdate.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/ScoreUpdate.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="31" column="73" selection-start-line="31" selection-start-column="73" selection-end-line="31" selection-end-column="73" />
-              <folding>
-                <element signature="e#1885#1886#0" expanded="true" />
-                <element signature="e#1909#1910#0" expanded="true" />
-                <element signature="e#2705#2706#0" expanded="true" />
-                <element signature="e#2730#2731#0" expanded="true" />
-                <element signature="e#3885#3886#0" expanded="true" />
-                <element signature="e#3927#3928#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SeatGeekEvents.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/SeatGeekEvents.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="690">
-              <caret line="55" column="63" selection-start-line="55" selection-start-column="63" selection-end-line="55" selection-end-column="63" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -91,8 +57,8 @@
       <file leaf-file-name="Messages.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+            <state relative-caret-position="360">
+              <caret line="24" column="56" selection-start-line="24" selection-start-column="56" selection-end-line="24" selection-end-column="56" />
               <folding />
             </state>
           </provider>
@@ -111,9 +77,23 @@
       <file leaf-file-name="DMHandler.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="473">
-              <caret line="219" column="63" selection-start-line="219" selection-start-column="63" selection-end-line="219" selection-end-column="63" />
-              <folding />
+            <state relative-caret-position="195">
+              <caret line="152" column="35" selection-start-line="152" selection-start-column="35" selection-end-line="152" selection-end-column="35" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TwitterUtil.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/TwitterUtil.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="244">
+              <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -121,8 +101,18 @@
       <file leaf-file-name="NotificationHandler.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/NotificationHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-835">
+            <state relative-caret-position="-556">
               <caret line="25" column="27" selection-start-line="25" selection-start-column="27" selection-end-line="25" selection-end-column="27" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pom.xml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/LazyFanSrc/pom.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="555">
+              <caret line="37" column="21" selection-start-line="37" selection-start-column="21" selection-end-line="37" selection-end-column="21" />
               <folding />
             </state>
           </provider>
@@ -179,7 +169,6 @@
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/SeatGeekEvents.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Pollers/Poller.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DM.java" />
-        <option value="$PROJECT_DIR$/LazyFanSrc/pom.xml" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Pollers/WNBAPoller.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/Event.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/Performer.java" />
@@ -189,11 +178,13 @@
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/SportType.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/ScoreUpdate.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Pollers/EspnScorePoller.java" />
-        <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java" />
-        <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Times.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/NotificationHandler.java" />
         <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Main.java" />
+        <option value="$PROJECT_DIR$/LazyFanSrc/pom.xml" />
+        <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java" />
+        <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/TwitterUtil.java" />
+        <option value="$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java" />
       </list>
     </option>
   </component>
@@ -210,10 +201,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1280" />
-    <option name="y" value="-377" />
-    <option name="width" value="1920" />
-    <option name="height" value="1109" />
+    <option name="y" value="23" />
+    <option name="width" value="1280" />
+    <option name="height" value="709" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1019,7 +1009,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1280" y="-377" width="1920" height="1109" extended-state="6" />
+    <frame x="0" y="23" width="1280" height="709" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1030,11 +1020,11 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27433628" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.55105346" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24973376" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18336026" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1075,14 +1065,6 @@
     <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/Performers.java" />
     <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Models/Schedule.java" />
     <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Parser/ScheduleParser.java" />
-    <entry file="file://$PROJECT_DIR$/LazyFanSrc/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="705">
-          <caret line="47" column="21" selection-start-line="47" selection-start-column="21" selection-end-line="47" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Pollers/WNBAPoller.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
@@ -1178,14 +1160,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Times.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="480">
@@ -1196,30 +1170,58 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="473">
-          <caret line="219" column="63" selection-start-line="219" selection-start-column="63" selection-end-line="219" selection-end-column="63" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/NotificationHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-835">
+        <state relative-caret-position="-556">
           <caret line="25" column="27" selection-start-line="25" selection-start-column="27" selection-end-line="25" selection-end-column="27" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Main.java">
+    <entry file="file://$PROJECT_DIR$/LazyFanSrc/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="485">
-          <caret line="60" column="79" selection-start-line="60" selection-start-column="79" selection-end-line="60" selection-end-column="79" />
+        <state relative-caret-position="555">
+          <caret line="37" column="21" selection-start-line="37" selection-start-column="21" selection-end-line="37" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/Messages.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="24" column="56" selection-start-line="24" selection-start-column="56" selection-end-line="24" selection-end-column="56" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Constants/TwitterUtil.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="244">
+          <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#1810#1811#0" expanded="true" />
-            <element signature="e#1840#1841#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Twitter/DMHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="152" column="35" selection-start-line="152" selection-start-column="35" selection-end-line="152" selection-end-column="35" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LazyFanSrc/src/main/java/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="134">
+          <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1718#1719#0" expanded="true" />
+            <element signature="e#1748#1749#0" expanded="true" />
           </folding>
         </state>
       </provider>

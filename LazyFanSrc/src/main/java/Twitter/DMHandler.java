@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -19,6 +20,7 @@ import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 import com.sun.javafx.event.DirectEvent;
 
 import Constants.Messages;
+import Constants.TwitterUtil;
 import twitter4j.DirectMessage;
 import twitter4j.Paging;
 import twitter4j.Twitter;
@@ -38,6 +40,7 @@ public class DMHandler {
   private Twitter twitter;
   private Connection conn;
   private Long lastDMid;
+  private Long lastFollowerID;
 
   public DMHandler(Connection conn, Twitter twitter) {
     this.conn = conn;
@@ -53,6 +56,9 @@ public class DMHandler {
           public void run() {
             System.out.println("Starting response to DMs.......");
             setTags(getDMsSinceLast());
+            for (long newFollower : getFollowersSince()) {
+              sendMessage(newFollower, Messages.NEW_FOLLOW);
+            }
             System.out.println("Finished responding to DMs.......");
           }
         }, 0, 1, TimeUnit.MINUTES);
@@ -65,6 +71,20 @@ public class DMHandler {
           lastDMid = rs.getLong(1);
         } else {
           lastDMid = null;
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void getLastFollower() {
+    try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM lastFollower")) {
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          lastFollowerID = rs.getLong(1);
+        } else {
+          lastFollowerID = null;
         }
       }
     } catch (SQLException e) {
@@ -94,6 +114,79 @@ public class DMHandler {
     } catch (TwitterException e) {
       System.out.println("Twitter services are down, couldn't retrieve DMs");
       return new ArrayList<>();
+    }
+  }
+
+  private List<Long> getFollowersSince() {
+    getLastFollower();
+    try {
+      if (lastFollowerID == null) {
+        List<Long> result = TwitterUtil.getAllFollowers(twitter, twitter.getId());
+        filterFollowersForActivity(result);
+        System.out.println("Number of followers: " + result.size());
+        setLastFollower(result);
+        return result;
+      } else {
+        List<Long> result =  TwitterUtil.getFollowersSince(twitter, twitter.getId(), lastFollowerID);
+        filterFollowersForActivity(result);
+        System.out.println("Number of new messages: " + result.size());
+        setLastFollower(result);
+        return result;
+      }
+    } catch (TwitterException e) {
+      System.out.println("Twitter services are down, couldn't retrieve DMs");
+      return new ArrayList<>();
+    }
+  }
+
+  /**
+   * Function that filters followers and removes them from the "to be notified" list if they
+   * have already given their preferences.
+   * @param followers, a list of longs
+   */
+  private void filterFollowersForActivity(List<Long> followers) {
+    String query = "SELECT DISTINCT userID FROM preferences";
+    Set<Long> users = new HashSet<>();
+    try (PreparedStatement prep = conn.prepareStatement(query)) {
+      try (ResultSet rs = prep.executeQuery()) {
+        while (rs.next()) {
+          users.add(rs.getLong(1));
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
+    for (Iterator<Long> i = followers.iterator(); i.hasNext();) {
+      long followerID = i.next();
+      if (users.contains(followerID)) {
+        i.remove();
+      }
+    }
+  }
+
+  private void setLastFollower(List<Long> followers) {
+    if (followers.size() > 0) {
+      Long last = followers.get(0);
+      if (lastFollowerID == null) {
+        try (PreparedStatement prep = conn.prepareStatement("INSERT INTO lastFollower VALUE (?)")) {
+          prep.setLong(1, last);
+          prep.execute();
+        } catch (SQLException e) {
+          e.printStackTrace();
+          System.out.println("Could not insert initial lastMessageID");
+        }
+      } else {
+        try (PreparedStatement prep = conn.prepareStatement("UPDATE lastFollower SET lastID = ? WHERE lastID = ?")) {
+          prep.setLong(1, last);
+          prep.setLong(2, lastFollowerID);
+          prep.execute();
+        } catch (SQLException e) {
+          e.printStackTrace();
+          System.out.println("Could not set last DM id in database table lastMessage");
+        }
+        lastFollowerID = last;
+      }
     }
   }
 
