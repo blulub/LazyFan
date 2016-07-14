@@ -60,4 +60,8 @@ public class TwitterUtil {
     }
     return output;
   }
+
+  public static String wrapInPercent(String str) {
+    return "%" + str.replaceAll(" ", "%") + "%";
+  }
 }

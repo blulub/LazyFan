@@ -253,7 +253,7 @@ public class DMHandler {
             sendSuccess(senderID, parsed.getKey());
           }
         }
-        //destroyDM(DM.getId());
+        destroyDM(DM.getId());
       }
 
       prep.executeBatch();
@@ -344,10 +344,10 @@ public class DMHandler {
         errors.add("<" + config + ">");
       } else {
         if (specs.length == 1) {
-          TeamConfiguration newConfig = new TeamConfiguration(specs[0].toLowerCase(), -1, -1, -1);
+          TeamConfiguration newConfig = new TeamConfiguration(specs[0].toLowerCase(), -1, -1, -1);  // add some default
           configs.add(newConfig);
         } else {
-          int timeLeft = Times.stringMinutesToIntSeconds(specs[2]);
+          int timeLeft = Times.stringMinutesToIntSeconds(specs[2].replaceAll(" ", ""));
           if (timeLeft == -1) {
             errors.add("<" + config + ">");
             continue;
@@ -356,7 +356,7 @@ public class DMHandler {
           try {
             TeamConfiguration newConfig = new TeamConfiguration(
                 specs[0].toLowerCase(),
-                Integer.valueOf(specs[1]),
+                Integer.valueOf(specs[1].replaceAll(" ", "")),
                 timeLeft,
                 Integer.parseInt(specs[3].replaceAll("\\D", ""))
             );
