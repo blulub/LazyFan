@@ -223,7 +223,9 @@ public class DMHandler {
           Messages.NEW_FOLLOW, Sets.newHashSet(),
           Messages.INVALID_KEYWORDS, Sets.newHashSet());
 
-      for (DirectMessage DM : messages) {
+      // go in reverse order, look at messages from old to new
+      for (int i = messages.size() - 1; i >= 0; i--) {
+        DirectMessage DM = messages.get(i);
         long senderID = DM.getSenderId();
         if (isResetRequest(DM)) {
           dropUserRecords(DM);

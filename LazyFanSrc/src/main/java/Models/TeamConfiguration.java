@@ -20,11 +20,12 @@ public class TeamConfiguration {
   @Override
   public String toString() {
     if (scoreDifferential == -1 && secondsleft == -1 && quarter == -1) {
-      return team + " on default settings";
+      return team + "\n" +
+          "  Default";
     }
     return team + "\n" + "  If score difference <= " + scoreDifferential + "\n" +
         "  If " + Times.intSecondsToStringMinutes(secondsleft) + " left\n" +
-        "  If in the " + periodName(quarter);
+        "  If in the " + periodName(quarter) + " period";
   }
 
   private String periodName(int period) {

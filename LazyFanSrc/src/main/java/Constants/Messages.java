@@ -10,6 +10,8 @@ public class Messages {
   public static final String OVERTIME =
           "Overtime number %d! %s (%d) @ %s (%d)";
       // overTimeNumber, awayTeam, homeTeam, awayScore, homeScore
+  public static final String OTHER_CONFIG =
+          "%s (%d) at %s (%d)\n%s left in %s";
 
   public static final String INVALID_KEYWORDS = "Errors determining teams\n";
   public static final String SUCCESSFUL_SET = "Success!\nYou will be alerted for:\n";
