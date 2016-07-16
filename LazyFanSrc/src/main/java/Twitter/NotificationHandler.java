@@ -99,7 +99,7 @@ public class NotificationHandler {
     int scoreDiff = Math.abs(update.getAwayScore() - update.getHomeScore());
     int period = Integer.parseInt(update.getCurrentPeriod().replaceAll("\\D", ""));
     StringBuilder query =
-        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (LOWER(team) = ? ");
+        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (LOWER(team) = ?  OR LOWER(team) = ? ");
     for (String keyword : update.getGameTitle().split(" ")) {
       query.append("OR LOWER(team)=? ");
     }
@@ -113,10 +113,11 @@ public class NotificationHandler {
     query.append(") AND scoreDiff >= ? AND timeLeft <= ? AND period <= ? AND alreadySent = false");
 
     Map<Long, String> output = new HashMap<>();
-    int queryIndex = 2;
+    int queryIndex = 3;
 
     try (PreparedStatement prep = conn.prepareStatement(query.toString())) {
       prep.setString(1, update.getGameTitle().toLowerCase());
+      prep.setString(2, update.getNotificationType().name().replaceAll("_", " ").toLowerCase());
       for (String keyword : update.getGameTitle().split(" ")) {
         prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;

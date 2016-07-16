@@ -68,12 +68,11 @@ public class EspnScorePoller {
               updates.addAll(doOneSportPoll(type, type.espnFormat()));
             }
 
-
             List<ScoreUpdate> updatesToNotify = filterUpdates(updates);
 
             for (ScoreUpdate update: updatesToNotify) {
               System.out.println("Updating twitter status to game: " + update.getGameTitle());
-              //notifier.updateStatus(update);
+              notifier.updateStatus(update);
               // message users with default team configurations
               notifier.messageDefaults(update);
             }
@@ -246,7 +245,7 @@ public class EspnScorePoller {
         httpLine = httpLine.replaceAll("%20", " ");
 
         String[] scoreArray =
-            httpLine.replaceAll("(?<=[a-zA-Z]) +(?=[a-zA-Z])", "-")
+            httpLine.replaceAll("(?<=[a-zA-Z.]) +(?=[a-zA-Z])", "-")
                 .replaceAll("\\s+", " ")
                 .split(" ");
 
@@ -270,9 +269,9 @@ public class EspnScorePoller {
       if (scores.size() != 6) {
         return null;
       }
-      String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
+      String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' .-]", "");
       int awayTeamScore = Integer.valueOf(scores.get(1));
-      String homeTeam = scores.get(2).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
+      String homeTeam = scores.get(2).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' .-]", "");
       int homeTeamScore = Integer.valueOf(scores.get(3));
       String time = scores.get(4);
       List<String> fullTeamNames = getFullTeamNames(homeTeam, awayTeam, type);
