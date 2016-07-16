@@ -13,5 +13,4 @@ public class Keys {
   public static final String MYSQL_USERNAME = System.getenv("MYSQL_USERNAME");
   public static final String MYSQL_PASSWORD = System.getenv("MYSQL_PASSWORD");
   public static final String DB_NAME = System.getenv("DB_NAME");
-
 }
