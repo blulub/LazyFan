@@ -43,6 +43,7 @@ public class Main {
     try {
       String driver = "com.mysql.jdbc.Driver";
       Class.forName(driver);
+      System.out.println(Keys.DB_NAME.substring(3));
       this.conn =
           DriverManager.getConnection(
               Keys.MYSQL_URL + Keys.DB_NAME,

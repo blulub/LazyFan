@@ -73,7 +73,7 @@ public class EspnScorePoller {
 
             for (ScoreUpdate update: updatesToNotify) {
               System.out.println("Updating twitter status to game: " + update.getGameTitle());
-              //notifier.updateStatus(update);
+              notifier.updateStatus(update);
               // message users with default team configurations
               notifier.messageDefaults(update);
             }
