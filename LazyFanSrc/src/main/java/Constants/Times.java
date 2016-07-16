@@ -11,8 +11,17 @@ public class Times {
   public static final int SCHEDULE_INTERVAL = 12; // hours
   public static final int CLEAR_SCHEDULE_INTERVAL = 8; // hours
 
+  public static final int INNING_BOTTOM = -2000;
+  public static final int INNING_TOP = -1000;
+
   public static int stringMinutesToIntSeconds(String minutes) {
     SimpleDateFormat sdf = new SimpleDateFormat("mm:ss");
+    String lower = minutes.toLowerCase().replaceAll(" ", "");
+    if (lower.equals("top") || lower.equals("t")) {
+      return Times.INNING_TOP;
+    } else if (lower.contains("bot") || lower.equals("b")) {
+      return Times.INNING_BOTTOM;
+    }
     try {
       Date date = sdf.parse(minutes);
       Calendar cal = Calendar.getInstance();
@@ -28,6 +37,12 @@ public class Times {
   }
 
   public static String intSecondsToStringMinutes(int seconds) {
+    if (seconds == INNING_TOP) {
+      return "TOP";
+    }
+    if (seconds == INNING_BOTTOM) {
+      return "BOTTOM";
+    }
     if (seconds < 0) {
       return "0:00";
     }

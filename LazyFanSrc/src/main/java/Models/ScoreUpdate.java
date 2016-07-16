@@ -2,6 +2,7 @@ package Models;
 
 import Constants.NotificationType;
 import Constants.SportType;
+import Constants.Times;
 
 public class ScoreUpdate {
   private String gameTitle;
@@ -45,6 +46,9 @@ public class ScoreUpdate {
     } catch (Exception e) {
       this.notificationType = NotificationType.GAMEOVER;
     }
+    if (this.notificationType == null) {
+      this.notificationType = NotificationType.NONE;
+    }
 
 
   }
@@ -70,7 +74,17 @@ public class ScoreUpdate {
 
   @Override
   public String toString() {
-    return gameTitle + ": " + awayScore + " to " + homeScore + " at " + timeLeft + " in the " + currentPeriod;
+    if (timeLeft != Times.INNING_BOTTOM && timeLeft != Times.INNING_TOP) {
+      return gameTitle + ": " + awayScore + " to " + homeScore + " at " + timeLeft + " in the " + currentPeriod;
+    } else {
+      String inn = null;
+      if (timeLeft == Times.INNING_TOP) {
+        inn = "TOP";
+      } else {
+        inn = "BOTTOM";
+      }
+      return gameTitle + ": " + awayScore + " to " + homeScore + " at "  + inn + " in the " + currentPeriod;
+    }
   }
 
   public NotificationType getNotificationType() {

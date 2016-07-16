@@ -10,8 +10,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +40,8 @@ import Twitter.NotificationHandler;
 public class EspnScorePoller {
   private Connection conn;
   private NotificationHandler notifier;
+  private DateFormat dateFormat;
+  private Date date;
 
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -43,6 +49,11 @@ public class EspnScorePoller {
   public EspnScorePoller(Connection conn, NotificationHandler not) {
     this.conn = conn;
     this.notifier = not;
+    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    this.dateFormat = dateFormat;
+    //get current date time with Date()
+    Date date = new Date();
+    this.date = date;
   }
 
   public void doPoll() {
@@ -50,16 +61,19 @@ public class EspnScorePoller {
         new Runnable() {
           @Override
           public void run() {
+            System.out.println(dateFormat.format(date));
             System.out.println("Starting poll for sport scores");
             List<ScoreUpdate> updates = new ArrayList<>();
             for (SportType type : SportType.values()) {
               updates.addAll(doOneSportPoll(type, type.espnFormat()));
             }
 
+
             List<ScoreUpdate> updatesToNotify = filterUpdates(updates);
+
             for (ScoreUpdate update: updatesToNotify) {
               System.out.println("Updating twitter status to game: " + update.getGameTitle());
-              notifier.updateStatus(update);
+              //notifier.updateStatus(update);
               // message users with default team configurations
               notifier.messageDefaults(update);
             }
@@ -69,9 +83,11 @@ public class EspnScorePoller {
               System.out.println("Notifying users for game: " + update.getGameTitle());
               notifier.dmUsersOnGame(update);
             }
+
             syncScoreUpdates(updates);
             cleanScoreUpdatesTable();
             System.out.println("Finished poll for sport scores......");
+            System.out.println(dateFormat.format(date));
           }
         }, 0, Times.LIVESCORE_INTERVAL, TimeUnit.MINUTES);
   }
@@ -105,6 +121,7 @@ public class EspnScorePoller {
         try (ResultSet rs = prep.executeQuery()) {
           if (rs.next()) {
             String updateType = rs.getString(1).toLowerCase();
+
             switch (update.getNotificationType()) {
 
               // if the game is currently tied, only notify if the previous state was none
@@ -133,6 +150,7 @@ public class EspnScorePoller {
           }
         }
       } catch (SQLException e) {
+        e.printStackTrace();
         System.out.println("Could not access past game state in scoreUpdates table");
       }
     }
@@ -248,10 +266,50 @@ public class EspnScorePoller {
    * @return ScoreUpdate object
    */
   public ScoreUpdate makeScoreUpdate(List<String> scores, SportType type) {
+    if (type.equals(SportType.MLB)) {
+      if (scores.size() != 6) {
+        return null;
+      }
+      String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
+      int awayTeamScore = Integer.valueOf(scores.get(1));
+      String homeTeam = scores.get(2).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
+      int homeTeamScore = Integer.valueOf(scores.get(3));
+      String time = scores.get(4);
+      List<String> fullTeamNames = getFullTeamNames(homeTeam, awayTeam, type);
+      homeTeam = fullTeamNames.get(0);
+      awayTeam = fullTeamNames.get(1);
+      if (time.toLowerCase().contains("end") || time.toLowerCase().contains("final")) {
+        time = "0:00";
+        int seconds = Times.stringMinutesToIntSeconds(time);
+        return new ScoreUpdate.ScoreUpdateBuilder(homeTeam, awayTeam, homeTeamScore, awayTeamScore, "END", seconds)
+            .gameTitle(awayTeam + " @ " + homeTeam)
+            .sportType(type)
+            .overtime(false)
+            .build();
+      }
+      int seconds = Times.stringMinutesToIntSeconds(time);
+      String period = scores.get(5);
+      int periodNumber = Integer.parseInt(period.replaceAll("\\D", ""));
+
+      // there are instances where we receive: LA Sparks 77 Chicago 67 0:00 IN 4th
+      if (seconds == 0 && periodNumber == type.getLastPeriod() && homeTeamScore != awayTeamScore) {
+        return new ScoreUpdate.ScoreUpdateBuilder(homeTeam, awayTeam, homeTeamScore, awayTeamScore, "END", seconds)
+            .gameTitle(awayTeam + " @ " + homeTeam)
+            .sportType(type)
+            .overtime(type.isOvertime(periodNumber))
+            .build();
+      }
+
+      return new ScoreUpdate.ScoreUpdateBuilder(homeTeam, awayTeam, homeTeamScore, awayTeamScore, period, seconds)
+          .gameTitle(awayTeam + " @ " + homeTeam)
+          .sportType(type)
+          .overtime(type.isOvertime(periodNumber))
+          .build();
+    }
+
     if (scores.size() != 7) {
       return null;
     }
-
     String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");
     int awayTeamScore = Integer.valueOf(scores.get(1));
     String homeTeam = scores.get(2).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");

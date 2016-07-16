@@ -23,6 +23,12 @@ public class TeamConfiguration {
       return team + "\n" +
           "  Default";
     }
+    String timeString = Times.intSecondsToStringMinutes(secondsleft);
+    if (secondsleft == Times.INNING_BOTTOM) {
+      timeString = "BOT inning";
+    } else if (secondsleft == Times.INNING_TOP) {
+      timeString = "TOP inning";
+    }
     return team + "\n" + "  If score difference <= " + scoreDifferential + "\n" +
         "  If " + Times.intSecondsToStringMinutes(secondsleft) + " left\n" +
         "  If in the " + periodName(quarter) + " period";

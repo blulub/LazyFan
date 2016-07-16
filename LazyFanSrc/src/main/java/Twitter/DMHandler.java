@@ -4,8 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,10 +41,17 @@ public class DMHandler {
   private Connection conn;
   private Long lastDMid;
   private Long lastFollowerID;
+  private DateFormat dateFormat;
+  private Date date;
 
   public DMHandler(Connection conn, Twitter twitter) {
     this.conn = conn;
     this.twitter = twitter;
+    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    this.dateFormat = dateFormat;
+    //get current date time with Date()
+    Date date = new Date();
+    this.date = date;
   }
 
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -51,12 +61,14 @@ public class DMHandler {
         new Runnable() {
           @Override
           public void run() {
+            System.out.println(dateFormat.format(date));
             System.out.println("Starting response to DMs.......");
             setTags(getDMsSinceLast());
             for (long newFollower : getFollowersSince()) {
               sendMessage(newFollower, Messages.NEW_FOLLOW, Sets.newHashSet());
             }
             System.out.println("Finished responding to DMs.......");
+            System.out.println(dateFormat.format(date));
           }
         }, 0, 1, TimeUnit.MINUTES);
   }

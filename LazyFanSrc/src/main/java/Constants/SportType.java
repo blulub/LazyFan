@@ -58,7 +58,7 @@ public enum SportType {
   },
   WNBA {
     @Override
-    public int getScoreThreshold() { return 30; }
+    public int getScoreThreshold() { return 3; }
   };
 
   public boolean isOvertime(int periodNumber) {

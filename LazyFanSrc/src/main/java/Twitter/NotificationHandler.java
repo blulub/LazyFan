@@ -5,11 +5,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
+
+import com.google.common.collect.Maps;
 
 import Constants.Messages;
+import Constants.NotificationType;
 import Constants.Times;
 import Models.ScoreUpdate;
 import twitter4j.Twitter;
@@ -48,33 +50,34 @@ public class NotificationHandler {
     int scoreDiff = Math.abs(update.getAwayScore() - update.getHomeScore());
     int period = Integer.parseInt(update.getCurrentPeriod().replaceAll("\\D", ""));
     StringBuilder query =
-        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (team = ? ");
+        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (LOWER(team) = ?  OR LOWER(team) = ?");
     for (String keyword : update.getGameTitle().split(" ")) {
-      query.append("OR team=? ");
+      query.append("OR LOWER(team)=? ");
     }
     for (String keyword : update.getHomeName().split(" ")) {
-      query.append("OR team=? ");
+      query.append("OR LOWER(team)=? ");
     }
     for (String keyword: update.getAwayName().split(" ")) {
-      query.append("OR team=? ");
+      query.append("OR LOWER(team)=? ");
     }
-    query.append(") AND scoreDiff == -1 AND timeLeft == -1 AND period == -1 AND alreadySent = false");
+    query.append(") AND scoreDiff = -1 AND timeLeft = -1 AND period = -1 AND alreadySent = false");
 
     Map<Long, String> output = new HashMap<>();
-    int queryIndex = 2;
+    int queryIndex = 3;
 
     try (PreparedStatement prep = conn.prepareStatement(query.toString())) {
-      prep.setString(1, update.getGameTitle());
+      prep.setString(1, update.getGameTitle().toLowerCase());
+      prep.setString(2, update.getType().toString().replaceAll("_", " ").toLowerCase());
       for (String keyword : update.getGameTitle().split(" ")) {
-        prep.setString(queryIndex, keyword);
+        prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;
       }
       for (String keyword : update.getHomeName().split(" ")) {
-        prep.setString(queryIndex, keyword);
+        prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;
       }
       for (String keyword: update.getAwayName().split(" ")) {
-        prep.setString(queryIndex, keyword);
+        prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;
       }
       try (ResultSet rs = prep.executeQuery()) {
@@ -83,60 +86,69 @@ public class NotificationHandler {
         }
       }
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not query database for users with default configs matching teams");
     }
     return output;
   }
 
   public Map<Long, String> getUsersWithInterest(ScoreUpdate update) {
+    if (update.getNotificationType() == NotificationType.GAMEOVER) {
+      return Maps.newHashMap();
+    }
     int scoreDiff = Math.abs(update.getAwayScore() - update.getHomeScore());
     int period = Integer.parseInt(update.getCurrentPeriod().replaceAll("\\D", ""));
     StringBuilder query =
-        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (team = ? ");
+        new StringBuilder("SELECT DISTINCT userID, team FROM preferences WHERE (LOWER(team) = ? ");
     for (String keyword : update.getGameTitle().split(" ")) {
-      query.append("OR team=? ");
+      query.append("OR LOWER(team)=? ");
     }
     for (String keyword : update.getHomeName().split(" ")) {
-      query.append("OR team=? ");
+      query.append("OR LOWER(team)=? ");
     }
     for (String keyword: update.getAwayName().split(" ")) {
-      query.append("OR team=? ");
+      query.append("OR LOWER(team)=? ");
     }
-    query.append(") AND scoreDiff <= ? AND timeLeft <= ? AND period >= ? AND alreadySent = false");
+
+    query.append(") AND scoreDiff >= ? AND timeLeft <= ? AND period <= ? AND alreadySent = false");
 
     Map<Long, String> output = new HashMap<>();
     int queryIndex = 2;
 
     try (PreparedStatement prep = conn.prepareStatement(query.toString())) {
-      prep.setString(1, update.getGameTitle());
+      prep.setString(1, update.getGameTitle().toLowerCase());
       for (String keyword : update.getGameTitle().split(" ")) {
-        prep.setString(queryIndex, keyword);
+        prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;
       }
       for (String keyword : update.getHomeName().split(" ")) {
-        prep.setString(queryIndex, keyword);
+        prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;
       }
       for (String keyword: update.getAwayName().split(" ")) {
-        prep.setString(queryIndex, keyword);
+        prep.setString(queryIndex, keyword.toLowerCase());
         queryIndex++;
       }
       prep.setInt(queryIndex++, scoreDiff);
       prep.setInt(queryIndex++, update.getTimeLeft());
       prep.setInt(queryIndex, period);
+
       try (ResultSet rs = prep.executeQuery()) {
         while (rs.next()) {
+          Long user = rs.getLong(1);
+          String team = rs.getString(2);
           output.put(rs.getLong(1), rs.getString(2));
         }
       }
     } catch (SQLException e) {
+      e.printStackTrace();
       System.out.println("Could not query database for users matching teams");
     }
     return output;
   }
 
   private void updateSent(Map<Long, String> updates) {
-    String query = "UPDATE preferences SET alreadySent = true WHERE userID = ? AND team = ?";
+    String query = "UPDATE preferences SET alreadySent = true WHERE userID = ? AND LOWER(team) = ?";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
       for (Long key : updates.keySet()) {
         prep.setLong(1, key);
@@ -145,7 +157,7 @@ public class NotificationHandler {
       }
       prep.executeBatch();
     } catch (SQLException e) {
-      System.out.println("Could not set update as sent");
+      e.printStackTrace();
     }
   }
 
@@ -190,7 +202,7 @@ public class NotificationHandler {
             scoreUpdate.getAwayName(),
             scoreUpdate.getAwayScore(),
             scoreUpdate.getHomeName(),
-            scoreUpdate.getHomeName(),
+            scoreUpdate.getHomeScore(),
             Times.intSecondsToStringMinutes(scoreUpdate.getTimeLeft()),
             scoreUpdate.getCurrentPeriod());
         break;
@@ -200,8 +212,11 @@ public class NotificationHandler {
 
   public void sendUserMessage(long user, ScoreUpdate scoreUpdate) {
     try {
+      String message = formatMessage(scoreUpdate);
       twitter.sendDirectMessage(user, formatMessage(scoreUpdate));
+      System.out.println("Sent user: " + user + " message about: " + scoreUpdate);
     } catch (TwitterException e) {
+      e.printStackTrace();
       System.out.println("Could not send DM, twitter service error");
     }
   }
