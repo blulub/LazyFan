@@ -192,7 +192,7 @@ public class NotificationHandler {
         break;
       case OVERTIME:
         message = String.format(Messages.OVERTIME,
-            scoreUpdate.getCurrentPeriod(),
+            Integer.parseInt(scoreUpdate.getCurrentPeriod().replaceAll("\\D", "")),
             scoreUpdate.getAwayName(),
             scoreUpdate.getAwayScore(),
             scoreUpdate.getHomeName(),

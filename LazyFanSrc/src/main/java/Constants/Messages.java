@@ -8,7 +8,7 @@ public class Messages {
       "Close game alert!\n%s (%d) @ %s (%d).\n%s left in %s";
       // awayName, awayScore, homeName, homeScore, timeLeft, quarter
   public static final String OVERTIME =
-          "Overtime number %d! %s (%d) @ %s (%d)";
+          "Overtime! Period %s! %s (%d) @ %s (%d)";
       // overTimeNumber, awayTeam, homeTeam, awayScore, homeScore
   public static final String OTHER_CONFIG =
           "%s (%d) at %s (%d)\n%s in %s";

@@ -379,8 +379,4 @@ public class EspnScorePoller {
     }
     return output;
   }
-
-
-
-
 }
