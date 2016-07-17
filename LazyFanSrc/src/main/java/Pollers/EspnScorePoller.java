@@ -258,6 +258,18 @@ public class EspnScorePoller {
     return output;
   }
 
+  private void deleteScoreUpdateOnFinal(String homeTeam, String awayTeam) {
+    String query = "DELETE FROM scoreUpdates WHERE LOWER(homeTeamName) Like ? AND LOWER(awayTeamName) LIKE ?";
+    try (PreparedStatement prep = conn.prepareStatement(query)) {
+      prep.setString(1, "%" + homeTeam.toLowerCase() + "%");
+      prep.setString(2, "%" + awayTeam.toLowerCase() + "%");
+      prep.execute();
+    } catch (SQLException e) {
+      e.printStackTrace();
+      System.out.println("Could not delete score update from table on FINAL");
+    }
+  }
+
   /**
    * Makes a ScoreUpdate object given a line of updates
    * @param scores A broken up string of updates
@@ -267,6 +279,9 @@ public class EspnScorePoller {
   public ScoreUpdate makeScoreUpdate(List<String> scores, SportType type) {
     if (type.equals(SportType.MLB)) {
       if (scores.size() != 6) {
+        if (scores.get(scores.size() - 1).toLowerCase().equals("final")) {
+          deleteScoreUpdateOnFinal(scores.get(0), scores.get(2));
+        }
         return null;
       }
       String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' .-]", "");
@@ -307,6 +322,9 @@ public class EspnScorePoller {
     }
 
     if (scores.size() != 7) {
+      if (scores.get(scores.size() - 1).toLowerCase().equals("final")) {
+        deleteScoreUpdateOnFinal(scores.get(0), scores.get(2));
+      }
       return null;
     }
     String awayTeam = scores.get(0).replaceAll("-", " ").replaceAll("[^A-Za-z0-9' -]", "");

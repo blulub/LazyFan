@@ -5,10 +5,10 @@ public class Messages {
       "Tied game alert!\n%s @ %s tied with %d.\n%s to go in %s";
       // awayName, homeName, score, timeLeft, quarter
   public static final String CLOSE_GAME_FORMAT =
-      "Close game alert!\n%s (%d) @ %s (%d).\n%s left in %s";
+      "Close game alert!\n%s (%d) @ %s (%d).\n%s in %s";
       // awayName, awayScore, homeName, homeScore, timeLeft, quarter
   public static final String OVERTIME =
-          "Overtime! Period %s! %s (%d) @ %s (%d)";
+          "Overtime! Period %d! %s (%d) @ %s (%d)";
       // overTimeNumber, awayTeam, homeTeam, awayScore, homeScore
   public static final String OTHER_CONFIG =
           "%s (%d) at %s (%d)\n%s in %s";
