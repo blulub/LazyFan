@@ -32,13 +32,25 @@ public class ScoreUpdate {
     try {
       int period = Integer.parseInt(currentPeriod.replaceAll("\\D", ""));
       if (period == type.getLastPeriod()) {
-        if (homeScore == awayScore) {
-          this.notificationType = NotificationType.TIED_GAME;
+
+        // mlb games are unique in that only one team has a chance to score at a time
+        if (this.type == SportType.MLB) {
+          if (this.timeLeft == Times.INNING_BOTTOM) { // we should only care about the last inning
+            if (homeScore == awayScore) {
+              this.notificationType = NotificationType.TIED_GAME;
+            } else if (homeScore < awayScore && (awayScore - homeScore) <= type.getScoreThreshold()) {
+              this.notificationType = NotificationType.CLOSE_GAME;
+            }
+          }
+        } else {
+          if (homeScore == awayScore) {
+            this.notificationType = NotificationType.TIED_GAME;
+          } else if (Math.abs(homeScore - awayScore) <= type.getScoreThreshold()) {
+            this.notificationType = NotificationType.CLOSE_GAME;
+          }
         }
-        if (Math.abs(homeScore - awayScore) <= type.getScoreThreshold()) {
-          this.notificationType = NotificationType.CLOSE_GAME;
-        }
-      } else if (isOvertime()) {
+
+      } else if (type.isOvertime(period)) {
         this.notificationType = NotificationType.OVERTIME;
       } else {
         this.notificationType = NotificationType.NONE;
