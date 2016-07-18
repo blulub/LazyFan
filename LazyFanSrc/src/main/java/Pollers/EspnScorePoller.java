@@ -259,7 +259,7 @@ public class EspnScorePoller {
   }
 
   private void deleteScoreUpdateOnFinal(String homeTeam, String awayTeam) {
-    String query = "DELETE FROM scoreUpdates WHERE LOWER(homeTeamName) Like ? AND LOWER(awayTeamName) LIKE ?";
+    String query = "DELETE FROM scoreUpdates WHERE LOWER(homeName) Like ? AND LOWER(awayName) LIKE ?";
     try (PreparedStatement prep = conn.prepareStatement(query)) {
       prep.setString(1, "%" + homeTeam.toLowerCase() + "%");
       prep.setString(2, "%" + awayTeam.toLowerCase() + "%");
